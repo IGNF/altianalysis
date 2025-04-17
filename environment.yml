@@ -1,0 +1,26 @@
+name: altianalysis
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10.*
+  - pyproj
+  - rasterio
+  - pandas
+  - geopandas
+  - tabulate
+  - requests
+  - pytest
+  - pysimplegui  # required for ign-gpao-utils
+  # --- linting (cf https://dev.to/m1yag1/how-to-setup-your-project-with-pre-commit-black-and-flake8-183k)
+  - black
+  - flake8
+  - isort
+  - pre-commit
+  - pip
+  - pip:
+    - docker  # used during tests because of gpao(https://github.com/docker/docker-py)
+    - ign-gpao-utils==0.2.2
+    - ign-gpao-project-builder==0.10.0
+    - ign-gpao-client==0.18.0
+    - ign-pdal-tools==1.3.0
+    - opencv-python-headless

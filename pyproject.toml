@@ -1,0 +1,22 @@
+[tool.black]
+line-length = 119
+include = '\.pyi?$'
+exclude = '''
+/(
+  \.toml
+  |\.sh
+  |\.git
+  |\.ini
+  |\.bat
+  | data
+)/
+'''
+
+[tool.pytest.ini_options]
+markers = [
+    "docker: marks tests that must be run to test our docker image",
+    "gpao: marks tests that need GPAO server, and that are slow",
+]
+
+[tool.isort]
+profile = "black"
