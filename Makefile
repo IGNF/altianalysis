@@ -2,7 +2,7 @@
 #	python -m pytest ./test -s --log-cli-level DEBUG
 
 install:
-	mamba env update -n altianalysis -f environment.yml
+	mamba env create -n altianalysis -f environment.yml
 
 install-precommit:
 	pre-commit install

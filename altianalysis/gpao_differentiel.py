@@ -45,7 +45,7 @@ docker run -t --rm --userns=host --shm-size=2gb
 -v {store.to_unix(dir_in)}:/input
 -v {store.to_unix(output)}:/output
 ghcr.io/ignf/altianalysis:{__version__}
-python -m altianalysis.calculDifferentiel.main 
+python -m altianalysis.calculDifferentiel 
 --dtm_lidar_file /input/{input_file} 
 --name_save_out /output/{input_file}
 """
@@ -123,7 +123,6 @@ def parse_args():
     return parser.parse_args()
 
 
-
 def compute_on_gpao(
     dtms_lhd: Path,
     out: Path,
@@ -159,4 +158,3 @@ if __name__=="__main__":
                     args.runner_store_path,
                     args.project_name
                     )
-    
