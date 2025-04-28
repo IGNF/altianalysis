@@ -63,7 +63,7 @@ def create_gpao_project(
 ) -> Project:
     
     logging.debug(
-        f"Create GPAO projects to compute {len(dtms_lhd)} difference maps with rge alti: {dtms_lhd}."
+        f"Create GPAO projects to compute difference maps with rge alti: {dtms_lhd}."
     )
     logging.debug(f"Writing difference maps to {out}.")
 

@@ -1,5 +1,5 @@
-#testing:
-#	python -m pytest ./test -s --log-cli-level DEBUG
+testing:
+	python -m pytest ./test -s --log-cli-level DEBUG
 
 install:
 	mamba env create -n altianalysis -f environment.yml

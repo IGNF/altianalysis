@@ -121,11 +121,11 @@ def _extract_rge_alti_tile_from_stream(
     # apply decorator to retry 3 times, and wait 30 seconds each times
     download_image_from_geoplateforme_retrying = retry(7, 15, 2)(download_image_from_geoplateforme)
 
-    tmp_rge = tempfile.NamedTemporaryFile(suffix="_dtm_rgealti.tif",delete=False)
+    tmp_rge = tempfile.NamedTemporaryFile(suffix="_dtm_rgealti.tif",delete=True)
     download_image_from_geoplateforme_retrying(
         proj, stream_RGE, minx, miny, maxx, maxy, pixel_per_meter, tmp_rge.name, timeout_second, check_images
     )
-    return tmp_rge.name
+    return tmp_rge
 
 
 
@@ -175,8 +175,12 @@ def _compute_one_difference(dtm_lhd_file: str,
             # compute difference for individual files 
             rge_file=_extract_rge_alti_tile_from_stream(full_dtm_file)
             _compute_difference_with_rge_alti(full_dtm_file,
-                                        rge_file,
+                                        rge_file.name,
                                         full_difference_file)
+            
+            # delete temporary file 
+            rge_file.close()
+
             
 
 
@@ -189,8 +193,8 @@ def compute_all_difference_maps (_dir: Path,
     for dtm_file in _dir.iterdir():
         if dtm_file.is_file() and \
             (str(dtm_file).endswith(".tif") or str(dtm_file).endswith(".TIF")):
-            print(dtm_file)
-            all_dtm_lhd_names.append(dtm_file)
+            print(dtm_file.name)
+            all_dtm_lhd_names.append(dtm_file.name)
 
     # bulk compute 
     _= Parallel(n_jobs=12,verbose=True)(delayed(_compute_one_difference)(dtm_lhd_file,_dir,_out_dir_difference) 
@@ -204,14 +208,12 @@ def parse_args():
         "-l",
         "--dtm_lidar_dir",
         type=Path,
-        nargs="+",
         required=True,
         help="Dossier des dalles MNT Lidar HD",
     )
     parser.add_argument("-o", "--name_dir_difference", type=Path, required=True, help="Dossier de sortie où seront sauvegardées les cartes de differences")
 
     return parser.parse_args()
-
 
 
 

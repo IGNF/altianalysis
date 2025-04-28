@@ -1,6 +1,6 @@
 MOUNT_DIR=/mnt/store-lidarhd
 
-python -m altianalysis.main \
+python -m altianalysis.gpao_differentiel \
 -i ${MOUNT_DIR}/production/chantiers/_LidarExpress/_dali/Sample \
 -o ${MOUNT_DIR}/production/chantiers/_LidarExpress/_dali/SampleDiff \
 -g smlqlidarhdap2 \
