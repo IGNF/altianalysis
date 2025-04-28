@@ -116,7 +116,7 @@ def parse_args():
 
 def _extract_rge_alti_tile_from_stream(
         dtm_lidar_file: str,
-        stream_RGE="ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES",
+        stream_RGE="RGEALTI-MNT_PYR-ZIP_FXX_LAMB93_WMS",#"ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES",
         proj="2154",
         pixel_per_meter=1,
         timeout_second=300,
@@ -137,7 +137,7 @@ def _extract_rge_alti_tile_from_stream(
     return tmp_rge.name
 
 
-
+"""
 def _compute_difference_with_rge_alti(dtm_lidar_file: str,
                                       dtm_rge_tile: str,
                                       name_save_out: str ) -> None:
@@ -171,7 +171,46 @@ def _compute_difference_with_rge_alti(dtm_lidar_file: str,
         # save result 
         with rasterio.open(name_save_out, 'w', **meta_dtm_lidar) as dst:
             dst.write(_difference,1)
+"""
 
+
+def _compute_difference_with_rge_alti(dtm_lidar_file: str,
+                                      dtm_rge_tile: str,
+                                      name_save_out: str ) -> None:
+    
+    # read dtm_lidar tile
+    with rasterio.open(dtm_lidar_file) as dtm_lidar, rasterio.open(dtm_rge_tile) as dtm_rge:
+        
+        # read dtm_lidar array 
+        data_dtm_lidar=dtm_lidar.read(1)
+
+        # copy metadata of mtd_lidar 
+        meta_dtm_lidar=dtm_lidar.meta.copy()
+
+        # window from rge alti 
+        window_rge=dtm_rge.window(*dtm_lidar.bounds)
+
+
+        # read the data from dtm_rge with the same window as dtm_lidar
+        data_dtm_rge_windowed = dtm_rge.read(1, 
+                                        window=window_rge, 
+                                        boundless=True, 
+                                        out_shape=data_dtm_lidar.shape,
+                                        resampling=Resampling.cubic,
+                                        fill_value=0)
+        
+        #data_dtm_rge_windowed=np.where(data_dtm_rge_windowed==dtm_rge.nodata, 0,data_dtm_rge_windowed)
+
+        # difference dem
+        _difference =  data_dtm_lidar - data_dtm_rge_windowed
+
+        _masq_nodata=np.logical_or((data_dtm_rge_windowed==dtm_rge.nodata), (data_dtm_lidar==dtm_lidar.nodata))
+
+        _difference[_masq_nodata]=dtm_lidar.nodata
+
+        # save result 
+        with rasterio.open(name_save_out, 'w', **meta_dtm_lidar) as dst:
+            dst.write(_difference,1)
 
 
 

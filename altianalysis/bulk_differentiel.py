@@ -107,7 +107,7 @@ def download_image_from_geoplateforme(
 
 def _extract_rge_alti_tile_from_stream(
         dtm_lidar_file: str,
-        stream_RGE="ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES",
+        stream_RGE="RGEALTI-MNT_PYR-ZIP_FXX_LAMB93_WMS",#"ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES",
         proj="2154",
         pixel_per_meter=1,
         timeout_second=300,
@@ -154,10 +154,14 @@ def _compute_difference_with_rge_alti(dtm_lidar_file: str,
                                         resampling=Resampling.cubic,
                                         fill_value=0)
         
-        data_dtm_rge_windowed=np.where(data_dtm_rge_windowed==dtm_rge.nodata, 0,data_dtm_rge_windowed)
+        #data_dtm_rge_windowed=np.where(data_dtm_rge_windowed==dtm_rge.nodata, 0,data_dtm_rge_windowed)
 
         # difference dem
         _difference =  data_dtm_lidar - data_dtm_rge_windowed
+
+        _masq_nodata=np.logical_or((data_dtm_rge_windowed==dtm_rge.nodata), (data_dtm_lidar==dtm_lidar.nodata))
+
+        _difference[_masq_nodata]=dtm_lidar.nodata
 
         # save result 
         with rasterio.open(name_save_out, 'w', **meta_dtm_lidar) as dst:

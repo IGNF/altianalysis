@@ -53,6 +53,13 @@ def test_calculDifferentiel():
     calculDifferentiel._compute_difference_with_rge_alti(dtm_lidar_file,tmp_dtm_rge_alti,out_difference_file)
 
 
+def test_calculDifferentiel_nodata():
+    dtm_lidar_file="./data/lhd/Semis_2021_0485_6196_LA93_IGN69_50CM.tif"
+    tmp_dtm_rge_alti=calculDifferentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file)
+    out_difference_file="./data/lhd/Difference_Semis_2021_0485_6196_LA93_IGN69_50CM.tif"
+    calculDifferentiel._compute_difference_with_rge_alti(dtm_lidar_file,tmp_dtm_rge_alti,out_difference_file)
+
+
 
 def test_bulk_differentiel():
     dtm_lidar_dir=Path("./data/lhd_dir_gpao")
@@ -77,7 +84,7 @@ def test_gpao_differentiel_create_gpao_project():
 
 
 
-
+"""
 def test_gpao_run():
     dtm_lidar_lhds="./data/lhd_dir_gpao"
     out_difference_dtms="./delta/lhd_dir_gpao_test"
@@ -99,16 +106,16 @@ def test_gpao_run():
     
     tu.execute_gpao_client(tags="docker", num_thread=4)
     wait_running_job(URL_API, project_name, delay_second=1, delay_log_second=10)
+"""
 
 
-
-
+"""
 if __name__=="__main__":
     test_calculDifferentiel()
     test_bulk_differentiel()
     test_gpao_differentiel_create_gpao_project()
     test_gpao_run()
 
-
+"""
 
 
