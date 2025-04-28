@@ -46,7 +46,7 @@ conda activate altianalysis
 Lancer l'utilitaire avec la commande suivante :
 
 ```bash
-python -m altianalysis.main -i <LHD>  \
+python -m altianalysis.calculDifferentiel -i <LHD>  \
                        -o <OUT> \
                        -g <GPAO_HOSTNAME> \
                        -l <LOCAL_STORE_PATH> \
