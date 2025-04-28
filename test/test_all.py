@@ -77,7 +77,7 @@ def test_gpao_differentiel_create_gpao_project():
 
 
 
-@pytest.mark.gpao
+
 def test_gpao_run():
     dtm_lidar_lhds="./data/lhd_dir_gpao"
     out_difference_dtms="./delta/lhd_dir_gpao_test"
