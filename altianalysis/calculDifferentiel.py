@@ -116,7 +116,7 @@ def parse_args():
 
 def _extract_rge_alti_tile_from_stream(
         dtm_lidar_file: str,
-        stream_RGE="ORTHOIMAGERY.ORTHOPHOTOS2021",#"HR.ORTHOIMAGERY.ORTHOPHOTOS",#"RGEALTI-MNT_PYR-ZIP_FXX_LAMB93_WMS",#"ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES",
+        stream_RGE="RGEALTI-MNT_PYR-ZIP_FXX_LAMB93_WMS",#"ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES",
         proj="2154",
         pixel_per_meter=1,
         timeout_second=300,
