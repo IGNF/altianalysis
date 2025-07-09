@@ -90,7 +90,7 @@ def parse_args():
         "-i",
         "--dtm_lhd_dir",
         type=Path,
-        nargs="+",
+        #nargs="+",
         required=True,
         help="Dossier des dalles MNT Lidar HD",
     )
