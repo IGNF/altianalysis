@@ -1,10 +1,8 @@
-import os, sys
-from pathlib import Path, PurePosixPath
+import os
+from pathlib import Path
 import rasterio
-import typing
 import numpy as np
 import argparse
-import logging
 from rasterio.enums import Resampling
 import requests
 import tempfile
@@ -122,10 +120,13 @@ def _extract_rge_alti_tile_from_stream(
     download_image_from_geoplateforme_retrying = retry(7, 15, 2)(download_image_from_geoplateforme)
 
     tmp_rge = tempfile.NamedTemporaryFile(suffix="_dtm_rgealti.tif",delete=True)
-    download_image_from_geoplateforme_retrying(
-        proj, stream_RGE, minx, miny, maxx, maxy, pixel_per_meter, tmp_rge.name, timeout_second, check_images
-    )
-    return tmp_rge
+    try:
+        download_image_from_geoplateforme_retrying(
+            proj, stream_RGE, minx, miny, maxx, maxy, pixel_per_meter, tmp_rge.name, timeout_second, check_images
+        )
+        return tmp_rge
+    except requests.exceptions.Timeout:
+        return None
 
 
 
@@ -178,12 +179,13 @@ def _compute_one_difference(dtm_lhd_file: str,
 
             # compute difference for individual files 
             rge_file=_extract_rge_alti_tile_from_stream(full_dtm_file)
-            _compute_difference_with_rge_alti(full_dtm_file,
-                                        rge_file.name,
-                                        full_difference_file)
-            
-            # delete temporary file 
-            rge_file.close()
+            if rge_file is not None:
+                _compute_difference_with_rge_alti(full_dtm_file,
+                                            rge_file.name,
+                                            full_difference_file)
+                
+                # delete temporary file 
+                rge_file.close()
 
             
 
