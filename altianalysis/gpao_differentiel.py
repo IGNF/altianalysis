@@ -47,7 +47,6 @@ python -m altianalysis.calculDifferentiel
 
 
 
-
 def create_gpao_project(
     dtms_lhd: Path,
     out: Path,
