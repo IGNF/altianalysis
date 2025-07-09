@@ -82,7 +82,6 @@ def create_gpao_project(
     return Project(project_name, jobs)
 
 
-
 def parse_args():
     parser = argparse.ArgumentParser(description="Calcul de cartes de différences par rapport au RGE ALTI")
     parser.add_argument(
