@@ -10,8 +10,8 @@ from gpao_utils.store import Store
 
 from gpao.job import Job
 
-from version import __version__
-from gpao_utilities import save_projects_as_json
+from altianalysis.version import __version__
+from altianalysis.gpao_utilities import save_projects_as_json
 
 
 
