@@ -44,15 +44,14 @@ STORE = Store("local_store", "win_store", "unix_store")
 
 URL_API = "http://localhost:8080/api/"
 
-
-
+@pytest.mark.docker
 def test_calculDifferentiel():
     dtm_lidar_file="./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
     tmp_dtm_rge_alti=calculDifferentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file)
     out_difference_file="./data/lhd/Difference_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
     calculDifferentiel._compute_difference_with_rge_alti(dtm_lidar_file,tmp_dtm_rge_alti,out_difference_file)
 
-
+@pytest.mark.docker
 def test_calculDifferentiel_nodata():
     dtm_lidar_file="./data/lhd/Semis_2021_0485_6196_LA93_IGN69_50CM.tif"
     tmp_dtm_rge_alti=calculDifferentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file)
@@ -60,14 +59,14 @@ def test_calculDifferentiel_nodata():
     calculDifferentiel._compute_difference_with_rge_alti(dtm_lidar_file,tmp_dtm_rge_alti,out_difference_file)
 
 
-
+@pytest.mark.docker
 def test_bulk_differentiel():
     dtm_lidar_dir=Path("./data/lhd_dir_gpao")
     out_difference_dir=Path("./delta/lhd_dir_gpao")
     bulk_differentiel.compute_all_difference_maps(dtm_lidar_dir,
                                                   out_difference_dir)
     
-
+@pytest.mark.gpao
 def test_gpao_differentiel_create_gpao_project():
     dtm_lidar_lhds=Path("./data/lhd_dir_gpao")
     out_difference_dtms=Path("./delta/lhd_dir_gpao_test")
