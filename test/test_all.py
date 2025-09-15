@@ -1,13 +1,13 @@
 import json
-import os.path as osp
-import sys
+import os
+import shutil
 from pathlib import Path
 
 import pytest
 from gpao_utils.store import Store
 
 import altianalysis.bulk_differentiel as bulk_differentiel
-import altianalysis.calculDifferentiel as calculDifferentiel
+import altianalysis.calcul_differentiel as calcul_differentiel
 import altianalysis.gpao_differentiel as gpao_differentiel
 
 # testing all routines
@@ -19,8 +19,6 @@ import altianalysis.gpao_differentiel as gpao_differentiel
 # from altianalysis import calculDifferentiel, bulk_differentiel, gpao_differentiel
 
 
-sys.path.append(osp.dirname(osp.dirname(osp.dirname(osp.dirname(__file__)))))
-
 TMP_PATH = Path("./tmp/main")
 
 STORE = Store("local_store", "win_store", "unix_store")
@@ -28,35 +26,51 @@ STORE = Store("local_store", "win_store", "unix_store")
 URL_API = "http://localhost:8080/api/"
 
 
+def setup_module(module):
+    try:
+        shutil.rmtree(TMP_PATH)
+    except FileNotFoundError:
+        pass
+    os.makedirs(TMP_PATH)
+
+
 @pytest.mark.docker
 def test_calculDifferentiel():
+    output_dir = TMP_PATH / "calculDifferentiel"
+    output_dir.mkdir()
     dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
-    tmp_dtm_rge_alti = calculDifferentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file)
-    out_difference_file = "./data/lhd/Difference_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
-    calculDifferentiel._compute_difference_with_rge_alti(dtm_lidar_file, tmp_dtm_rge_alti, out_difference_file)
+    dtm_rge_alti = output_dir / "dtm_rge_alti.tif"
+    out_difference_file = output_dir / "Difference_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+    calcul_differentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
+    calcul_differentiel._compute_difference_with_rge_alti(dtm_lidar_file, dtm_rge_alti, out_difference_file)
 
 
 @pytest.mark.docker
 def test_calculDifferentiel_nodata():
+    output_dir = TMP_PATH / "calculDifferentiel_nodata"
+    output_dir.mkdir()
     dtm_lidar_file = "./data/lhd/Semis_2021_0485_6196_LA93_IGN69_50CM.tif"
-    tmp_dtm_rge_alti = calculDifferentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file)
-    out_difference_file = "./data/lhd/Difference_Semis_2021_0485_6196_LA93_IGN69_50CM.tif"
-    calculDifferentiel._compute_difference_with_rge_alti(dtm_lidar_file, tmp_dtm_rge_alti, out_difference_file)
+    dtm_rge_alti = output_dir / "dtm_rge_alti.tif"
+    calcul_differentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
+    out_difference_file = output_dir / "Difference_Semis_2021_0485_6196_LA93_IGN69_50CM.tif"
+    calcul_differentiel._compute_difference_with_rge_alti(dtm_lidar_file, dtm_rge_alti, out_difference_file)
 
 
 @pytest.mark.docker
 def test_bulk_differentiel():
+    output_dir = TMP_PATH / "bulk_differentiel"
+    output_dir.mkdir()
     dtm_lidar_dir = Path("./data/lhd_dir_gpao")
-    out_difference_dir = Path("./delta/lhd_dir_gpao")
-    bulk_differentiel.compute_all_difference_maps(dtm_lidar_dir, out_difference_dir)
+    bulk_differentiel.compute_all_difference_maps(dtm_lidar_dir, output_dir)
 
 
 @pytest.mark.gpao
 def test_gpao_differentiel_create_gpao_project():
+    output_dir = TMP_PATH / "gpao_differentiel_create_gpao_project"
+    output_dir.mkdir()
     dtm_lidar_lhds = Path("./data/lhd_dir_gpao")
-    out_difference_dtms = Path("./delta/lhd_dir_gpao_test")
     project_name = "test_create_gpao_project_difference_with_dem_rge_alti"
-    project = gpao_differentiel.create_gpao_project(dtm_lidar_lhds, out_difference_dtms, STORE, project_name)
+    project = gpao_differentiel.create_gpao_project(dtm_lidar_lhds, output_dir, STORE, project_name)
 
     assert project is not None
 
