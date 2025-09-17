@@ -1,0 +1,163 @@
+import os
+import shutil
+from pathlib import Path
+
+import numpy as np
+import rasterio
+from scipy.interpolate import RegularGridInterpolator
+
+import altianalysis.calcul_differentiel as calcul_differentiel
+
+TMP_PATH = Path("./tmp/main")
+
+
+def setup_module(module):
+    try:
+        shutil.rmtree(TMP_PATH)
+    except FileNotFoundError:
+        pass
+    os.makedirs(TMP_PATH)
+
+
+def test_calcul_differentiel_assert_correct_bounds():
+    output_dir = TMP_PATH / "calcul_differentiel_correct_bounds"
+    output_dir.mkdir()
+    dtm_rge_alti = output_dir / "dtm_rge_alti.tif"
+    dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+    calcul_differentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
+
+    # read dtm rge alti and dtm_lidar_file and check bounds
+    with rasterio.open(dtm_lidar_file) as dtm_lidar, rasterio.open(dtm_rge_alti) as dtm_rge:
+
+        _bounds_dtm_lidar = dtm_lidar.bounds
+        _bounds_dtm_rge = dtm_rge.bounds
+
+        assertion = (
+            (_bounds_dtm_lidar.left == _bounds_dtm_rge.left)
+            & (_bounds_dtm_lidar.right == _bounds_dtm_rge.right)
+            & (_bounds_dtm_lidar.bottom == _bounds_dtm_rge.bottom)
+            & (_bounds_dtm_lidar.top == _bounds_dtm_rge.top)
+        )
+
+        assert assertion, "tiles extents are not matching !"
+
+
+def test_calcul_differentiel_with_self():
+    output_dir = TMP_PATH / "caclul_differentiel"
+    output_dir.mkdir()
+    dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+    out_difference_file = output_dir / "Self_Difference_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+    calcul_differentiel._compute_difference_with_rge_alti(dtm_lidar_file, dtm_lidar_file, out_difference_file)
+    # read the self difference file  and check consistency
+    with rasterio.open(out_difference_file) as out_diff_file:
+        _diff = out_diff_file.read()
+        assert np.all(_diff == 0), "difference with self yields non null values !"
+
+
+# test simple difference with rge alti
+def test_calcul_differentiel():
+    _epsilon = 0.5
+    output_dir = TMP_PATH / "calcul_differentiel"
+    output_dir.mkdir()
+    dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+    dtm_rge_alti = output_dir / "dtm_rge_alti.tif"
+    out_difference_file = output_dir / "Difference_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+    out_recomputed_lidar_file = output_dir / "Rebuilt_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+    calcul_differentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
+    calcul_differentiel._compute_difference_with_rge_alti(dtm_lidar_file, dtm_rge_alti, out_difference_file)
+
+    # read files and check if we can reconstruct initial lidar image
+    with rasterio.open(out_difference_file) as diff_file, rasterio.open(dtm_rge_alti) as dem_rge_file:
+        _diff = diff_file.read()
+        _dem_rge = dem_rge_file.read()
+
+        meta_diff_lidar = diff_file.meta.copy()
+
+        _, H, W = _dem_rge.shape
+
+        # upsample rge_alti dem using given ratio of GSDs
+        _ratio = diff_file.transform[0] / dem_rge_file.transform[0]
+
+        # fit points
+        fit_points = [np.arange(0, H), np.arange(0, W)]
+
+        _interpolator = RegularGridInterpolator(
+            fit_points, _dem_rge[0, :, :], bounds_error=False, fill_value=dem_rge_file.nodata
+        )
+
+        _points_ratio_x, _points_ratio_y = np.meshgrid(
+            np.arange(0, W - _ratio, _ratio), np.arange(0, H - _ratio, _ratio), indexing="ij"
+        )
+
+        test_points = np.array([_points_ratio_x.ravel(), _points_ratio_y.ravel()]).T
+
+        _interpolated_dem_rge_at_ratio = _interpolator(test_points, method="cubic")
+
+        _interpolated_dem_rge_at_ratio = np.reshape(
+            _interpolated_dem_rge_at_ratio, (1, int((H - _ratio) / _ratio), int((W - _ratio) / _ratio))
+        )
+
+        _sum = _diff[:, :-1, :-1] + _interpolated_dem_rge_at_ratio
+
+        with rasterio.open(dtm_lidar_file) as dtm_lidar:
+            _lidar = dtm_lidar.read()[:, :-1, :-1]
+
+            assert np.all(
+                np.abs(_sum - _lidar) < _epsilon
+            ), "unable to reconstruct lidar data from difference file and reg alti dem !"
+
+            # write reconstructed lidar dem
+            with rasterio.open(out_recomputed_lidar_file, "w", **meta_diff_lidar) as dst:
+                dst.write(_sum)
+
+
+def test_calcul_differentiel_nodata():
+    output_dir = TMP_PATH / "calcul_differentiel_nodata"
+    output_dir.mkdir()
+    # lidar dtm with nodata
+    dtm_lidar_file = "./data/lhd/Semis_2021_0485_6196_LA93_IGN69_50CM.tif"
+    dtm_rge_alti = output_dir / "dtm_rge_alti.tif"
+    calcul_differentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
+    out_difference_file = output_dir / "Difference_Semis_2021_0485_6196_LA93_IGN69_50CM.tif"
+    calcul_differentiel._compute_difference_with_rge_alti(dtm_lidar_file, dtm_rge_alti, out_difference_file)
+
+    # check that there are no values when nodata
+    with rasterio.open(out_difference_file) as computed_difference, rasterio.open(
+        dtm_lidar_file
+    ) as dtm_lidar, rasterio.open(dtm_rge_alti) as rge_alti:
+
+        _diff = computed_difference.read()
+        _dtm_lidar = dtm_lidar.read()
+        rge_dem = rge_alti.read()
+
+        # nodata
+        nodata_diff_mask = _diff == computed_difference.nodata  # should capture the union of both nodata masks
+
+        nodata_dtm_lidar = _dtm_lidar == dtm_lidar.nodata
+        nodata_reg_alti = rge_dem == rge_alti.nodata
+
+        # interpolate nodata_rge_alti in nearest neighbor mode ( mask of nodata)
+
+        _, H, W = rge_dem.shape
+
+        _ratio = computed_difference.transform[0] / rge_alti.transform[0]
+
+        # fit points
+        fit_points = [np.arange(0, H), np.arange(0, W)]
+
+        _interpolator = RegularGridInterpolator(fit_points, nodata_reg_alti[0, :, :], bounds_error=False, fill_value=0)
+
+        _points_ratio_x, _points_ratio_y = np.meshgrid(
+            np.arange(0, W - _ratio, _ratio), np.arange(0, H - _ratio, _ratio), indexing="ij"
+        )
+
+        test_points = np.array([_points_ratio_x.ravel(), _points_ratio_y.ravel()]).T
+
+        _interpolated_dem_nodata = _interpolator(test_points, method="nearest")
+
+        _interpolated_dem_nodata = np.reshape(
+            _interpolated_dem_nodata, (1, int((H - _ratio) / _ratio), int((W - _ratio) / _ratio))
+        )
+        nodata_combined = np.logical_or(nodata_dtm_lidar[:, :-1, :-1], _interpolated_dem_nodata)
+
+        assert np.all(nodata_diff_mask[:, :-1, :-1] == nodata_combined), "Added or missed nodata values !"

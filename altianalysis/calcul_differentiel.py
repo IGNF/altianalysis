@@ -133,9 +133,11 @@ def main():
     args = parse_args()
 
     with tempfile.NamedTemporaryFile(suffix="_dtm_rgealti.tif", delete=False) as tmp_rge:
-        _extract_rge_alti_tile_from_stream(args.dtm_lidar_file, pixel_per_meter=5, output_path=tmp_rge.name)
 
-        _compute_difference_with_rge_alti(args.dtm_lidar_file, tmp_rge, args.name_save_out)
+        success = _extract_rge_alti_tile_from_stream(args.dtm_lidar_file, pixel_per_meter=5, output_path=tmp_rge.name)
+
+        if success:
+            _compute_difference_with_rge_alti(args.dtm_lidar_file, tmp_rge, args.name_save_out)
 
 
 if __name__ == "__main__":

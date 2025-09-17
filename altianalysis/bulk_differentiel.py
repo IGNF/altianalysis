@@ -28,7 +28,6 @@ def compute_all_difference_maps(_dir: Path, _out_dir_difference: Path):
 
     for dtm_file in _dir.iterdir():
         if dtm_file.is_file() and (str(dtm_file).endswith(".tif") or str(dtm_file).endswith(".TIF")):
-            print(dtm_file.name)
             all_dtm_lhd_names.append(dtm_file.name)
 
     # bulk compute
