@@ -13,7 +13,9 @@ exclude = '''
 '''
 
 [tool.pytest.ini_options]
-markers = []
+markers = [
+  "gpao: marks tests that need GPAO server, and that are slow"
+]
 
 [tool.isort]
 profile = "black"

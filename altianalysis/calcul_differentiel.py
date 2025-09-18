@@ -54,44 +54,7 @@ def _extract_rge_alti_tile_from_stream(
         return False
 
 
-"""
-def _compute_difference_with_rge_alti(dtm_lidar_file: str,
-                                      dtm_rge_tile: str,
-                                      name_save_out: str ) -> None:
-
-    # read dtm_lidar tile
-    with rasterio.open(dtm_lidar_file) as dtm_lidar, rasterio.open(dtm_rge_tile) as dtm_rge:
-
-        # read dtm_lidar array
-        data_dtm_lidar=dtm_lidar.read(1)
-
-        # copy metadata of mtd_lidar
-        meta_dtm_lidar=dtm_lidar.meta.copy()
-
-        # window from rge alti
-        window_rge=dtm_rge.window(*dtm_lidar.bounds)
-
-
-        # read the data from dtm_rge with the same window as dtm_lidar
-        data_dtm_rge_windowed = dtm_rge.read(1,
-                                        window=window_rge,
-                                        boundless=True,
-                                        out_shape=data_dtm_lidar.shape,
-                                        resampling=Resampling.cubic,
-                                        fill_value=0)
-
-        data_dtm_rge_windowed=np.where(data_dtm_rge_windowed==dtm_rge.nodata, 0,data_dtm_rge_windowed)
-
-        # difference dem
-        _difference =  data_dtm_lidar - data_dtm_rge_windowed
-
-        # save result
-        with rasterio.open(name_save_out, 'w', **meta_dtm_lidar) as dst:
-            dst.write(_difference,1)
-"""
-
-
-def _compute_difference_with_rge_alti(dtm_lidar_file: str, dtm_rge_tile: str, name_save_out: str) -> None:
+def compute_difference_between_dtms(dtm_lidar_file: str, dtm_rge_tile: str, name_save_out: str) -> None:
 
     # read dtm_lidar tile
     with rasterio.open(dtm_lidar_file) as dtm_lidar, rasterio.open(dtm_rge_tile) as dtm_rge:
@@ -137,7 +100,7 @@ def main():
         success = _extract_rge_alti_tile_from_stream(args.dtm_lidar_file, pixel_per_meter=5, output_path=tmp_rge.name)
 
         if success:
-            _compute_difference_with_rge_alti(args.dtm_lidar_file, tmp_rge, args.name_save_out)
+            compute_difference_between_dtms(args.dtm_lidar_file, tmp_rge, args.name_save_out)
 
 
 if __name__ == "__main__":
