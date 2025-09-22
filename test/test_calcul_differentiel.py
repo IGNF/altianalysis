@@ -165,17 +165,9 @@ def test_main():
     output_dir = TMP_PATH / "calcul_differentiel_main"
     output_dir.mkdir()
     dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
-    secondary_elevation_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
-    out_difference_file = output_dir / "Difference_Semis_2021_0886_6443_LA93_IGN69_50CM_NULL.tif"
-    calcul_differentiel.main(dtm_lidar_file, secondary_elevation_file, out_difference_file)
 
-    with rasterio.open(out_difference_file) as output_difference:
-        diff = output_difference.read()
-        assert np.all(diff == 0), "difference with self is not null !"
-
-    # consider using the elevation stream from RGE ALTI
     out_difference_file = output_dir / "Difference_with_rge_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
 
-    calcul_differentiel.main(dtm_lidar_file, None, out_difference_file)
+    calcul_differentiel.main(dtm_lidar_file, out_difference_file)
 
     assert os.path.exists(out_difference_file), "difference with rge alti not computed !"
