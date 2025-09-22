@@ -14,8 +14,7 @@ exclude = '''
 
 [tool.pytest.ini_options]
 markers = [
-  "docker: marks tests that must be run to test our docker image",
-  "gpao: marks tests that need GPAO server, and that are slow",
+  "gpao: marks tests that need GPAO server, and that are slow"
 ]
 
 [tool.isort]

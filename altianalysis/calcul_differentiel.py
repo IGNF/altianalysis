@@ -13,7 +13,6 @@ from rasterio.enums import Resampling
 def parse_args():
     parser = argparse.ArgumentParser("compute difference map between lidar dtm and rge alti")
     parser.add_argument("--dtm_lidar_file", type=str, help="dtm lidar tif file")
-    # parser.add_argument("--dtm_rge_tile", type=str, help="rge alti tif file")
     parser.add_argument("--name_save_out", type=str, help="name of difference file")
     return parser.parse_args()
 
@@ -54,44 +53,7 @@ def _extract_rge_alti_tile_from_stream(
         return False
 
 
-"""
-def _compute_difference_with_rge_alti(dtm_lidar_file: str,
-                                      dtm_rge_tile: str,
-                                      name_save_out: str ) -> None:
-
-    # read dtm_lidar tile
-    with rasterio.open(dtm_lidar_file) as dtm_lidar, rasterio.open(dtm_rge_tile) as dtm_rge:
-
-        # read dtm_lidar array
-        data_dtm_lidar=dtm_lidar.read(1)
-
-        # copy metadata of mtd_lidar
-        meta_dtm_lidar=dtm_lidar.meta.copy()
-
-        # window from rge alti
-        window_rge=dtm_rge.window(*dtm_lidar.bounds)
-
-
-        # read the data from dtm_rge with the same window as dtm_lidar
-        data_dtm_rge_windowed = dtm_rge.read(1,
-                                        window=window_rge,
-                                        boundless=True,
-                                        out_shape=data_dtm_lidar.shape,
-                                        resampling=Resampling.cubic,
-                                        fill_value=0)
-
-        data_dtm_rge_windowed=np.where(data_dtm_rge_windowed==dtm_rge.nodata, 0,data_dtm_rge_windowed)
-
-        # difference dem
-        _difference =  data_dtm_lidar - data_dtm_rge_windowed
-
-        # save result
-        with rasterio.open(name_save_out, 'w', **meta_dtm_lidar) as dst:
-            dst.write(_difference,1)
-"""
-
-
-def _compute_difference_with_rge_alti(dtm_lidar_file: str, dtm_rge_tile: str, name_save_out: str) -> None:
+def compute_difference_between_dtms(dtm_lidar_file: str, dtm_rge_tile: str, name_save_out: str) -> None:
 
     # read dtm_lidar tile
     with rasterio.open(dtm_lidar_file) as dtm_lidar, rasterio.open(dtm_rge_tile) as dtm_rge:
@@ -129,14 +91,16 @@ def _compute_difference_with_rge_alti(dtm_lidar_file: str, dtm_rge_tile: str, na
             dst.write(_difference, 1)
 
 
-def main():
-    args = parse_args()
+def main(reference_dtm_file: Path | str, output_difference_file: Path | str):
 
     with tempfile.NamedTemporaryFile(suffix="_dtm_rgealti.tif", delete=False) as tmp_rge:
-        _extract_rge_alti_tile_from_stream(args.dtm_lidar_file, pixel_per_meter=5, output_path=tmp_rge.name)
 
-        _compute_difference_with_rge_alti(args.dtm_lidar_file, tmp_rge, args.name_save_out)
+        success = _extract_rge_alti_tile_from_stream(reference_dtm_file, pixel_per_meter=5, output_path=tmp_rge.name)
+
+        if success:
+            compute_difference_between_dtms(reference_dtm_file, tmp_rge, output_difference_file)
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(args.dtm_lidar_file, args.name_save_out)

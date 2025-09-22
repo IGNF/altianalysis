@@ -128,9 +128,8 @@ def compute_on_gpao(
 
     builder = Builder([project])
     logging.info(f"Send projects to gpao server: {gpao_hostname}")
-    builder.send_project_to_api(f"http://{gpao_hostname}:8080")
-    # Do not use builder.save_as_json because it resets projects/jobs ids.
-    # cf https://github.com/ign-gpao/builder-python/issues/10
+    builder.send_project_to_api(f"http://{gpao_hostname}:8080/api/")
+
     save_projects_as_json([project], out / "gpao_project.json")
 
 

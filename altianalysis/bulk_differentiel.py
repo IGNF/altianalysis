@@ -5,7 +5,7 @@ from pathlib import Path
 
 from joblib import Parallel, delayed
 
-from altianalysis.calcul_differentiel import _compute_difference_with_rge_alti, _extract_rge_alti_tile_from_stream
+from altianalysis.calcul_differentiel import _extract_rge_alti_tile_from_stream, compute_difference_between_dtms
 
 
 def _compute_one_difference(dtm_lhd_file: str, _dir: Path, _out_dir_difference: Path):
@@ -18,7 +18,7 @@ def _compute_one_difference(dtm_lhd_file: str, _dir: Path, _out_dir_difference: 
 
         success = _extract_rge_alti_tile_from_stream(full_dtm_file, tmp_rge.name)
         if success:
-            _compute_difference_with_rge_alti(full_dtm_file, tmp_rge.name, full_difference_file)
+            compute_difference_between_dtms(full_dtm_file, tmp_rge.name, full_difference_file)
 
 
 def compute_all_difference_maps(_dir: Path, _out_dir_difference: Path):
@@ -28,7 +28,6 @@ def compute_all_difference_maps(_dir: Path, _out_dir_difference: Path):
 
     for dtm_file in _dir.iterdir():
         if dtm_file.is_file() and (str(dtm_file).endswith(".tif") or str(dtm_file).endswith(".TIF")):
-            print(dtm_file.name)
             all_dtm_lhd_names.append(dtm_file.name)
 
     # bulk compute
