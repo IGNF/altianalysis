@@ -8,7 +8,6 @@ from gpao.job import Job
 from gpao.project import Project
 from gpao_utils.store import Store
 
-from altianalysis.gpao_utilities import save_projects_as_json
 from altianalysis.version import __version__
 
 
@@ -33,7 +32,7 @@ docker run -t --rm --userns=host --shm-size=2gb
 -v {store.to_unix(dir_in)}:/input
 -v {store.to_unix(output)}:/output
 ghcr.io/ignf/altianalysis:{__version__}
-python -m altianalysis.calculDifferentiel
+python -m altianalysis.calcul_differentiel
 --dtm_lidar_file /input/{input_file}
 --name_save_out /output/{input_file}
 """
@@ -69,6 +68,30 @@ def create_gpao_project(
 
     # create the project
     return Project(project_name, jobs)
+
+
+def compute_on_gpao(
+    dtms_lhd: Path,
+    out: Path,
+    gpao_hostname: str,
+    local_store_path: Path,
+    runner_store_path: PurePosixPath,
+    project_name: str,
+):
+
+    logging.debug(f"Use GPAO server: {gpao_hostname}")
+
+    store = Store(local_store_path, unix_path=runner_store_path)
+
+    logging.debug(f"Local store path ({local_store_path}) converted to client store path ({runner_store_path})")
+
+    project = create_gpao_project(dtms_lhd, out, store, project_name)
+    builder = Builder([project])
+
+    builder.save_as_json(out / "gpao_project.json")
+
+    logging.info(f"Send projects to gpao server: {gpao_hostname}")
+    builder.send_project_to_api(f"http://{gpao_hostname}:8080")
 
 
 def parse_args():
@@ -107,30 +130,6 @@ def parse_args():
     parser.add_argument("-p", "--project_name", type=str, default="altianalysis", help="Nom de projet pour la GPAO")
 
     return parser.parse_args()
-
-
-def compute_on_gpao(
-    dtms_lhd: Path,
-    out: Path,
-    gpao_hostname: str,
-    local_store_path: Path,
-    runner_store_path: PurePosixPath,
-    project_name: str,
-):
-
-    logging.debug(f"Use GPAO server: {gpao_hostname}")
-
-    store = Store(local_store_path, unix_path=runner_store_path)
-
-    logging.debug(f"Local store path ({local_store_path}) converted to client store path ({runner_store_path})")
-
-    project = create_gpao_project(dtms_lhd, out, store, project_name)
-
-    builder = Builder([project])
-    logging.info(f"Send projects to gpao server: {gpao_hostname}")
-    builder.send_project_to_api(f"http://{gpao_hostname}:8080/api/")
-
-    save_projects_as_json([project], out / "gpao_project.json")
 
 
 if __name__ == "__main__":
