@@ -32,10 +32,8 @@ def test_extract_rge_alti_tile_from_stream():
         bounds_dtm_lidar = dtm_lidar.bounds
         bounds_dtm_rge = dtm_rge.bounds
 
-        assertion = bounds_dtm_lidar == bounds_dtm_rge
-
         assert (
-            assertion
+            bounds_dtm_lidar == bounds_dtm_rge
         ), f"tiles extents are not matching: lidar dtm has ({bounds_dtm_lidar.left}, \
             {bounds_dtm_lidar.right}, {bounds_dtm_lidar.bottom}, {bounds_dtm_lidar.top}), \
                 rge dtm has ({bounds_dtm_rge.left}, {bounds_dtm_rge.right}, {bounds_dtm_rge.bottom}, \
@@ -161,3 +159,23 @@ def test_calcul_differentiel_nodata():
         nodata_combined = np.logical_or(nodata_dtm_lidar[:, :-1, :-1], _interpolated_dem_nodata)
 
         assert np.all(nodata_diff_mask[:, :-1, :-1] == nodata_combined), "Added or missed nodata values !"
+
+
+def test_main():
+    output_dir = TMP_PATH / "calcul_differentiel_main"
+    output_dir.mkdir()
+    dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+    secondary_elevation_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+    out_difference_file = output_dir / "Difference_Semis_2021_0886_6443_LA93_IGN69_50CM_NULL.tif"
+    calcul_differentiel.main(dtm_lidar_file, secondary_elevation_file, out_difference_file)
+
+    with rasterio.open(out_difference_file) as output_difference:
+        diff = output_difference.read()
+        assert np.all(diff == 0), "difference with self is not null !"
+
+    # consider using the elevation stream from RGE ALTI
+    out_difference_file = output_dir / "Difference_with_rge_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+
+    calcul_differentiel.main(dtm_lidar_file, None, out_difference_file)
+
+    assert os.path.exists(out_difference_file), "difference with rge alti not computed !"

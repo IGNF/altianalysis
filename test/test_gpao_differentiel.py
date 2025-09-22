@@ -3,7 +3,11 @@ import os
 import shutil
 from pathlib import Path
 
-import pytest
+# import pytest
+# import requests
+# from client import worker
+# from gpao.builder import Builder, Project
+# from gpao_utils import gpao_test as gt
 from gpao_utils.store import Store
 
 import altianalysis.gpao_differentiel as gpao_differentiel
@@ -23,7 +27,6 @@ def setup_module(module):
     os.makedirs(TMP_PATH)
 
 
-@pytest.mark.gpao
 def test_gpao_differentiel_create_gpao_project():
     output_dir = TMP_PATH / "gpao_differentiel_create_gpao_project"
     output_dir.mkdir()

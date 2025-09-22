@@ -13,7 +13,9 @@ from rasterio.enums import Resampling
 def parse_args():
     parser = argparse.ArgumentParser("compute difference map between lidar dtm and rge alti")
     parser.add_argument("--dtm_lidar_file", type=str, help="dtm lidar tif file")
-    # parser.add_argument("--dtm_rge_tile", type=str, help="rge alti tif file")
+    parser.add_argument(
+        "--second_elevation_file", default=None, type=str, help="secondary elevation file when no stream to be used !"
+    )
     parser.add_argument("--name_save_out", type=str, help="name of difference file")
     return parser.parse_args()
 
@@ -92,16 +94,23 @@ def compute_difference_between_dtms(dtm_lidar_file: str, dtm_rge_tile: str, name
             dst.write(_difference, 1)
 
 
-def main():
-    args = parse_args()
+def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, output_difference_file: Path | str):
 
-    with tempfile.NamedTemporaryFile(suffix="_dtm_rgealti.tif", delete=False) as tmp_rge:
+    if secondary_dtm_file:
+        compute_difference_between_dtms(reference_dtm_file, secondary_dtm_file, output_difference_file)
 
-        success = _extract_rge_alti_tile_from_stream(args.dtm_lidar_file, pixel_per_meter=5, output_path=tmp_rge.name)
+    else:
 
-        if success:
-            compute_difference_between_dtms(args.dtm_lidar_file, tmp_rge, args.name_save_out)
+        with tempfile.NamedTemporaryFile(suffix="_dtm_rgealti.tif", delete=False) as tmp_rge:
+
+            success = _extract_rge_alti_tile_from_stream(
+                reference_dtm_file, pixel_per_meter=5, output_path=tmp_rge.name
+            )
+
+            if success:
+                compute_difference_between_dtms(reference_dtm_file, tmp_rge, output_difference_file)
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(args.dtm_lidar_file, args.second_elevation_file, args.name_save_out)
