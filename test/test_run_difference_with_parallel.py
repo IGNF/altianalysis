@@ -2,9 +2,9 @@ import os
 import shutil
 from pathlib import Path
 
-import altianalysis.bulk_differentiel as bulk_differentiel
+import altianalysis.run_difference_with_parallel as run_difference_with_parallel
 
-TMP_PATH = Path("./tmp/bulk_differentiel")
+TMP_PATH = Path("./tmp/run_diffrerence_with_parallel")
 
 
 def setup_module(module):
@@ -15,11 +15,11 @@ def setup_module(module):
     os.makedirs(TMP_PATH)
 
 
-def test_bulk_differentiel():
-    output_dir = TMP_PATH / "bulk_differentiel"
+def test_compute_all_difference_maps():
+    output_dir = TMP_PATH / "compute_all_difference_maps"
     output_dir.mkdir()
     dtm_lidar_dir = Path("./data/lhd_dir_gpao")
-    bulk_differentiel.compute_all_difference_maps(dtm_lidar_dir, output_dir)
+    run_difference_with_parallel.compute_all_difference_maps(dtm_lidar_dir, output_dir)
 
     # check all difference maps are computed and stored in output_dir
     for lidar_dtm_file in dtm_lidar_dir.iterdir():

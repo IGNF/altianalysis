@@ -8,9 +8,9 @@ import pytest
 from gpao_utils.gpao_test import wait_running_job
 from gpao_utils.store import Store
 
-import altianalysis.gpao_differentiel as gpao_differentiel
+import altianalysis.run_difference_with_gpao as run_difference_with_gpao
 
-TMP_PATH = Path("./tmp/gpao_differentiel")
+TMP_PATH = Path("./tmp/run_difference_with_gpao")
 
 STORE = Store("local_store", "win_store", "unix_store")
 
@@ -28,7 +28,7 @@ def test_create_gpao_project():
     output_dir = TMP_PATH / "create_gpao_project"
     dtm_lidar_lhds = Path("./data/lhd_dir_gpao")
     project_name = "test_create_gpao_project_difference_with_dem_rge_alti"
-    project = gpao_differentiel.create_gpao_project(dtm_lidar_lhds, output_dir, STORE, project_name)
+    project = run_difference_with_gpao.create_gpao_project(dtm_lidar_lhds, output_dir, STORE, project_name)
 
     assert project is not None
 
@@ -52,7 +52,7 @@ def test_gpao_run():
     runner_store_path = Path(dtm_lidar_lhds).resolve()
     local_store_path = Path("data/lhd_dir_gpao").resolve()
 
-    gpao_differentiel.compute_on_gpao(
+    run_difference_with_gpao.compute_on_gpao(
         Path(dtm_lidar_lhds), Path(output_dir), gpao_hostname, local_store_path, runner_store_path, project_name
     )
 

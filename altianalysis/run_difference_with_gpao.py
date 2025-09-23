@@ -32,7 +32,7 @@ docker run -t --rm --userns=host --shm-size=2gb
 -v {store.to_unix(dir_in)}:/input
 -v {store.to_unix(output)}:/output
 ghcr.io/ignf/altianalysis:{__version__}
-python -m altianalysis.calcul_differentiel
+python -m altianalysis.compute_difference
 --dtm_lidar_file /input/{input_file}
 --name_save_out /output/{input_file}
 """
