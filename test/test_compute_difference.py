@@ -6,9 +6,9 @@ import numpy as np
 import rasterio
 from scipy.interpolate import RegularGridInterpolator
 
-import altianalysis.calcul_differentiel as calcul_differentiel
+import altianalysis.compute_difference as compute_difference
 
-TMP_PATH = Path("./tmp/calcul_differentiel")
+TMP_PATH = Path("./tmp/compute_difference")
 
 
 def setup_module(module):
@@ -20,11 +20,11 @@ def setup_module(module):
 
 
 def test_extract_rge_alti_tile_from_stream():
-    output_dir = TMP_PATH / "calcul_differentiel_correct_bounds"
+    output_dir = TMP_PATH / "extract_rge_alti_tile_from_stream"
     output_dir.mkdir()
     dtm_rge_alti = output_dir / "dtm_rge_alti.tif"
     dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
-    calcul_differentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
+    compute_difference._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
 
     # read dtm rge alti and dtm_lidar_file and check bounds
     with rasterio.open(dtm_lidar_file) as dtm_lidar, rasterio.open(dtm_rge_alti) as dtm_rge:
@@ -41,11 +41,11 @@ def test_extract_rge_alti_tile_from_stream():
 
 
 def test_compute_difference_between_dtms_with_self():
-    output_dir = TMP_PATH / "calcul_differentiel_self"
+    output_dir = TMP_PATH / "compute_difference_between_dtms_with_self"
     output_dir.mkdir()
     dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
     out_difference_file = output_dir / "Self_Difference_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
-    calcul_differentiel.compute_difference_between_dtms(dtm_lidar_file, dtm_lidar_file, out_difference_file)
+    compute_difference.compute_difference_between_dtms(dtm_lidar_file, dtm_lidar_file, out_difference_file)
     # read the self difference file  and check consistency
     with rasterio.open(out_difference_file) as out_diff_file:
         _diff = out_diff_file.read()
@@ -53,16 +53,16 @@ def test_compute_difference_between_dtms_with_self():
 
 
 # test simple difference with rge alti
-def test_calcul_differentiel():
+def test_compute_difference_and_reconstruct():
     _epsilon = 0.5
-    output_dir = TMP_PATH / "calcul_differentiel_all"
+    output_dir = TMP_PATH / "compute_difference_and_reconstruct"
     output_dir.mkdir()
     dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
     dtm_rge_alti = output_dir / "dtm_rge_alti.tif"
     out_difference_file = output_dir / "Difference_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
     out_recomputed_lidar_file = output_dir / "Rebuilt_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
-    calcul_differentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
-    calcul_differentiel.compute_difference_between_dtms(dtm_lidar_file, dtm_rge_alti, out_difference_file)
+    compute_difference._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
+    compute_difference.compute_difference_between_dtms(dtm_lidar_file, dtm_rge_alti, out_difference_file)
 
     # read files and check if we can reconstruct initial lidar image
     with rasterio.open(out_difference_file) as diff_file, rasterio.open(dtm_rge_alti) as dem_rge_file:
@@ -109,15 +109,15 @@ def test_calcul_differentiel():
                 dst.write(_sum)
 
 
-def test_calcul_differentiel_nodata():
-    output_dir = TMP_PATH / "calcul_differentiel_nodata"
+def test_compute_difference_with_nodata():
+    output_dir = TMP_PATH / "compute_difference_with_nodata"
     output_dir.mkdir()
     # lidar dtm with nodata
     dtm_lidar_file = "./data/lhd/Semis_2021_0485_6196_LA93_IGN69_50CM.tif"
     dtm_rge_alti = output_dir / "dtm_rge_alti.tif"
-    calcul_differentiel._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
+    compute_difference._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
     out_difference_file = output_dir / "Difference_Semis_2021_0485_6196_LA93_IGN69_50CM.tif"
-    calcul_differentiel.compute_difference_between_dtms(dtm_lidar_file, dtm_rge_alti, out_difference_file)
+    compute_difference.compute_difference_between_dtms(dtm_lidar_file, dtm_rge_alti, out_difference_file)
 
     # check that there are no values when nodata
     with rasterio.open(out_difference_file) as computed_difference, rasterio.open(
@@ -134,7 +134,7 @@ def test_calcul_differentiel_nodata():
         nodata_dtm_lidar = _dtm_lidar == dtm_lidar.nodata
         nodata_reg_alti = rge_dem == rge_alti.nodata
 
-        # interpolate nodata_rge_alti in nearest neighbor mode ( mask of nodata)
+        # interpolate nodata_rge_alti in nearest neighbor mode (mask of nodata)
 
         _, H, W = rge_dem.shape
 
@@ -162,12 +162,12 @@ def test_calcul_differentiel_nodata():
 
 
 def test_main():
-    output_dir = TMP_PATH / "calcul_differentiel_main"
+    output_dir = TMP_PATH / "main"
     output_dir.mkdir()
     dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
 
     out_difference_file = output_dir / "Difference_with_rge_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
 
-    calcul_differentiel.main(dtm_lidar_file, out_difference_file)
+    compute_difference.main(dtm_lidar_file, out_difference_file)
 
     assert os.path.exists(out_difference_file), "difference with rge alti not computed !"

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from joblib import Parallel, delayed
 
-from altianalysis.calcul_differentiel import _extract_rge_alti_tile_from_stream, compute_difference_between_dtms
+from altianalysis.compute_difference import _extract_rge_alti_tile_from_stream, compute_difference_between_dtms
 
 
 def _compute_one_difference(dtm_lhd_file: str, _dir: Path, _out_dir_difference: Path):

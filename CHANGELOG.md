@@ -1,5 +1,6 @@
 # master
 
+- refactor: rename python files to use english words
 - fix: improve gpao handling
 - refactor: change and add some tests
 - refactor: use latest version of ign-pdal-tools (v1.14.0) as a dependency
