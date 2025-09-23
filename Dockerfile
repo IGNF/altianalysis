@@ -12,6 +12,9 @@ COPY --from=mamba_pdal /opt/conda/envs/altianalysis/lib/ /opt/conda/envs/altiana
 COPY --from=mamba_pdal /opt/conda/envs/altianalysis/ssl /opt/conda/envs/altianalysis/ssl
 COPY --from=mamba_pdal /opt/conda/envs/altianalysis/share/proj/proj.db /opt/conda/envs/altianalysis/share/proj/proj.db
 
+# install gdal command line tools
+COPY --from=mamba_pdal /opt/conda/envs/altianalysis/bin/*gdal* /opt/conda/envs/altianalysis/bin/
+
 ENV PATH=$PATH:/opt/conda/envs/altianalysis/bin/
 ENV PROJ_LIB=/opt/conda/envs/altianalysis/share/proj/
 
