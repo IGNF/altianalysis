@@ -1,4 +1,4 @@
-FROM mambaorg/micromamba:latest as mamba_pdal
+FROM mambaorg/micromamba:latest AS mamba_pdal
 COPY environment.yml /environment.yml
 USER root
 RUN micromamba env create -n altianalysis -f /environment.yml
@@ -19,6 +19,8 @@ WORKDIR /altianalysis
 RUN mkdir tmp
 COPY altianalysis altianalysis
 COPY test test
+# Copy pyproject to register pytest markers
+COPY pyproject.toml pyproject.toml
 
 # Copy test data that are stored directly in the altianalysis repository
 COPY data/lhd data/lhd
