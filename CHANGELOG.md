@@ -1,5 +1,7 @@
 # master
 
+# 1.1.0
+
 - refactor: rename python files to use english words
 - fix: improve gpao handling
 - refactor: change and add some tests
