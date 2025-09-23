@@ -1,54 +1,14 @@
 import socket
-from pathlib import Path
 
-import numpy as np
-import pandas as pd
 import requests
 from client import worker
-
-csv_separator = ";"
-
-
-def csv_num_rows(f: Path):
-    assert f.exists()
-    df = pd.read_csv(f, sep=csv_separator)
-    return df.shape[0]
-
-
-def csv_num_col(f: Path):
-    assert f.exists()
-    df = pd.read_csv(f, sep=csv_separator)
-    return df.shape[1]
-
-
-def basic_check_on_df(f: Path) -> pd.DataFrame:
-    """Check if a file exists, open it as a pandas dataframe to check that it has meaningful data :
-        - no null value
-        - not only zeros
-    Returns the dataframe for potential further investigation
-
-    Args:
-        f (Path): path to input csv file
-
-    Returns:
-        pd.DataFrame: read dataframe
-    """
-    assert (f).is_file()
-    df = pd.read_csv(f, dtype={"class": str}, sep=csv_separator)
-    assert not df.isnull().values.any()
-    assert np.count_nonzero(df)  # To check that not all values == 0
-    return df
-
-
-def hostname():
-    return socket.gethostname()
 
 
 def execute_gpao_client(tags: str = "docker", num_thread: int = 1):
     """Execute a GPAO client on this host"""
     parameters = {
         "url_api": worker.GPAO_API_URL,
-        "hostname": hostname(),
+        "hostname": socket.gethostname(),
         "tags": tags,
         "autostart": "2",
         "mode_exec_and_quit": True,

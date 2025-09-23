@@ -19,7 +19,7 @@ dependencies:
   - pip
   - pip:
     - docker  # used during tests because of gpao(https://github.com/docker/docker-py)
-    - ign-gpao-utils==0.2.2
+    - ign-gpao-utils==0.3.0
     - ign-gpao-project-builder==0.10.0
     - ign-gpao-client==0.18.0
     - ign-pdal-tools==1.14.0

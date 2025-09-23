@@ -1,13 +1,40 @@
-name: cicd_light
+name: cicd_test
 
 on:
-  # Run tests for non-draft pull request on dev
+  # Run tests for non-draft pull request on master
   pull_request:
+    branches:
+      - master
+  # Re-run tests when pull requests are merged to master
+  # (to prevent cases where merging fails)
+  push:
     branches:
       - master
 
 jobs:
-  build_and_test:
+  local_tests:
+    runs-on: ubuntu-latest
+    permissions:
+        contents: read
+        packages: write
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v5
+      # See https://github.com/marketplace/actions/setup-micromamba
+      - name: Install mamba environment
+        uses: mamba-org/setup-micromamba@v2.0.6
+        with:
+          environment-file: environment.yml
+          environment-name: altianalysis  # activate the environment
+          cache-environment: true
+          cache-downloads: true
+          generate-run-shell: true
+      - name: Run unit tests
+        shell: micromamba-shell {0}
+        run: python -m pytest -m "not gpao" -s --log-cli-level DEBUG
+
+  gpao_tests:
     runs-on: ubuntu-latest
     permissions:
         contents: read
@@ -36,19 +63,19 @@ jobs:
           - 8000:8000
 
     steps:
-      - name: log GPAO database
+      - name: Log GPAO database
         shell: bash
         run: docker logs "${{ job.services.database.id }}"
-      - name: log GPAO API
+      - name: Log GPAO API
         shell: bash
         run: docker logs "${{ job.services.api-gpao.id }}"
-      - name: docker ps
+      - name: Docker ps
         shell: bash
         run: docker ps
-      - name: test database connection
+      - name: Test database connection
         shell: bash
         run: pg_isready -d gpao -h localhost -p 5432 -U postgres
-      - name: test API connection
+      - name: Test API connection
         shell: bash
         run: curl http://localhost:8080/api/projects
 
@@ -63,13 +90,10 @@ jobs:
           cache-environment: true
           cache-downloads: true
           generate-run-shell: true
-      - name: test unit
-        shell: micromamba-shell {0}
-        run: python -m pytest -m "not gpao" -s --log-cli-level DEBUG
-      - name: make docker local
+      - name: Create local docker image
         shell: bash
         run: make docker-build
-      - name: test GPAO
+      - name: Run GPAO tests
         shell: micromamba-shell {0}
         run: python -m pytest -m gpao -s --log-cli-level DEBUG
 
