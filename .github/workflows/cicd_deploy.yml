@@ -32,7 +32,7 @@ jobs:
         docker run
         --ipc=host
         ${{ env.TEST_TAG }}
-        python -m pytest -m docker -s --log-cli-level DEBUG
+        python -m pytest -m "not gpao" -s --log-cli-level DEBUG
 
     - name: Set version number
       run: |
