@@ -19,13 +19,28 @@ def test_compute_all_difference_maps():
     output_dir = TMP_PATH / "compute_all_difference_maps"
     output_dir.mkdir()
     dtm_lidar_dir = Path("./data/lhd_dir_gpao")
-    run_difference_with_parallel.compute_all_difference_maps(dtm_lidar_dir, output_dir)
+
+    run_difference_with_parallel.compute_all_difference_maps(dtm_lidar_dir, None, output_dir)
 
     # check all difference maps are computed and stored in output_dir
     for lidar_dtm_file in dtm_lidar_dir.iterdir():
         if lidar_dtm_file.is_file() and str(lidar_dtm_file).endswith(".tif"):
             # check if corresponding difference file exists
             _matching_difference_file = output_dir / lidar_dtm_file.name
+            assert os.path.exists(_matching_difference_file), "Difference file of {} is not computed!".format(
+                lidar_dtm_file
+            )
+
+    # second test with secondary folder of dtm files holding the same names
+    output_dir_with_sec = TMP_PATH / "compute_all_difference_maps"
+    sec_dtm_dir = Path("./data/lhd_dir_gpao")
+
+    run_difference_with_parallel.compute_all_difference_maps(dtm_lidar_dir, sec_dtm_dir, output_dir_with_sec)
+
+    for lidar_dtm_file in dtm_lidar_dir.iterdir():
+        if lidar_dtm_file.is_file() and str(lidar_dtm_file).endswith(".tif"):
+            # check if corresponding difference file exists
+            _matching_difference_file = output_dir_with_sec / lidar_dtm_file.name
             assert os.path.exists(_matching_difference_file), "Difference file of {} is not computed!".format(
                 lidar_dtm_file
             )

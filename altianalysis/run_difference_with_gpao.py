@@ -25,23 +25,37 @@ def get_tile_names(folder: Path) -> List[str]:
     return filenames
 
 
-def create_one_job_one_difference(store: Store, dir_in: Path, input_file: str, output: Path):
+def create_one_job_one_difference(store: Store, dir_in: Path, second_dir: Path | None, input_file: str, output: Path):
     job_name = f"difference_{input_file}"
-    command = f"""
-docker run -t --rm --userns=host --shm-size=2gb
--v {store.to_unix(dir_in)}:/input
--v {store.to_unix(output)}:/output
-ghcr.io/ignf/altianalysis:{__version__}
-python -m altianalysis.compute_difference
---dtm_lidar_file /input/{input_file}
---name_save_out /output/{input_file}
-"""
+    if second_dir is not None:
+        command = f"""
+    docker run -t --rm --userns=host --shm-size=2gb
+    -v {store.to_unix(dir_in)}:/input
+    -v {store.to_unix(second_dir)}:/second_input
+    -v {store.to_unix(output)}:/output
+    ghcr.io/ignf/altianalysis:{__version__}
+    python -m altianalysis.compute_difference
+    --dtm_lidar_file /input/{input_file}
+    --second_elevation_file /second_input{input_file}
+    --name_save_out /output/{input_file}
+    """
+    else:
+        command = f"""
+    docker run -t --rm --userns=host --shm-size=2gb
+    -v {store.to_unix(dir_in)}:/input
+    -v {store.to_unix(output)}:/output
+    ghcr.io/ignf/altianalysis:{__version__}
+    python -m altianalysis.compute_difference
+    --dtm_lidar_file /input/{input_file}
+    --name_save_out /output/{input_file}
+    """
     job = Job(job_name, command, tags=["docker"])
     return job
 
 
 def create_gpao_project(
     dtms_lhd: Path,
+    secondary_dir: Path | None,
     out: Path,
     store: Store,
     project_name: str,
@@ -63,7 +77,7 @@ def create_gpao_project(
     jobs = []
 
     for tile_ in dtm_tile_names:
-        job = create_one_job_one_difference(store, dtms_lhd, tile_, out)
+        job = create_one_job_one_difference(store, dtms_lhd, secondary_dir, tile_, out)
         jobs.append(job)
 
     # create the project
@@ -72,6 +86,7 @@ def create_gpao_project(
 
 def compute_on_gpao(
     dtms_lhd: Path,
+    secondary_dir: Path | None,
     out: Path,
     gpao_hostname: str,
     local_store_path: Path,
@@ -85,7 +100,7 @@ def compute_on_gpao(
 
     logging.debug(f"Local store path ({local_store_path}) converted to client store path ({runner_store_path})")
 
-    project = create_gpao_project(dtms_lhd, out, store, project_name)
+    project = create_gpao_project(dtms_lhd, secondary_dir, out, store, project_name)
     builder = Builder([project])
 
     builder.save_as_json(out / "gpao_project.json")
@@ -104,6 +119,14 @@ def parse_args():
         required=True,
         help="Dossier des dalles MNT Lidar HD",
     )
+    parser.add_argument(
+        "-i",
+        "--secondary_dtm_dir",
+        type=Path,
+        default=None,
+        help="Dossier du second des MNT pour calculer la différence",
+    )
+
     parser.add_argument(
         "-o",
         "--out",
@@ -139,6 +162,7 @@ if __name__ == "__main__":
 
     compute_on_gpao(
         args.dtm_lhd_dir,
+        args.secondary_dtm_dir,
         args.out,
         args.gpao_hostname,
         args.local_store_path,

@@ -28,7 +28,7 @@ def test_create_gpao_project():
     output_dir = TMP_PATH / "create_gpao_project"
     dtm_lidar_lhds = Path("./data/lhd_dir_gpao")
     project_name = "test_create_gpao_project_difference_with_dem_rge_alti"
-    project = run_difference_with_gpao.create_gpao_project(dtm_lidar_lhds, output_dir, STORE, project_name)
+    project = run_difference_with_gpao.create_gpao_project(dtm_lidar_lhds, None, output_dir, STORE, project_name)
 
     assert project is not None
 
@@ -53,7 +53,7 @@ def test_gpao_run():
     local_store_path = Path("data/lhd_dir_gpao").resolve()
 
     run_difference_with_gpao.compute_on_gpao(
-        Path(dtm_lidar_lhds), Path(output_dir), gpao_hostname, local_store_path, runner_store_path, project_name
+        Path(dtm_lidar_lhds), None, Path(output_dir), gpao_hostname, local_store_path, runner_store_path, project_name
     )
 
     if gpao_hostname == "localhost":
