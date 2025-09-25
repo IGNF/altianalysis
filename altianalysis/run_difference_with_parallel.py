@@ -7,14 +7,14 @@ from joblib import Parallel, delayed
 from altianalysis.compute_difference import main
 
 
-def _compute_one_difference(dtm_lhd_file: str, _dir: Path, _out_dir_difference: Path, second_dir=None):
+def _compute_one_difference(dtm_file: str, _dir: Path, _out_dir_difference: Path, second_dir=None):
 
-    full_dtm_file = os.path.join(_dir, dtm_lhd_file)
-    full_difference_file = os.path.join(_out_dir_difference, dtm_lhd_file)
+    full_dtm_file = os.path.join(_dir, dtm_file)
+    full_difference_file = os.path.join(_out_dir_difference, dtm_file)
     second_file = None
 
     if second_dir:
-        second_file = os.path.join(second_dir, dtm_lhd_file)
+        second_file = os.path.join(second_dir, dtm_file)
 
     main(full_dtm_file, second_file, full_difference_file)
 
@@ -22,15 +22,15 @@ def _compute_one_difference(dtm_lhd_file: str, _dir: Path, _out_dir_difference: 
 def compute_all_difference_maps(dir: Path, second_dir: Path | None, out_dir_difference: Path):
 
     os.makedirs(out_dir_difference, exist_ok=True)
-    all_dtm_lhd_names = []
+    all_dtm_names = []
     for dtm_file in dir.iterdir():
         if dtm_file.is_file() and (str(dtm_file).endswith(".tif") or str(dtm_file).endswith(".TIF")):
-            all_dtm_lhd_names.append(dtm_file.name)
+            all_dtm_names.append(dtm_file.name)
 
     # bulk compute
     _ = Parallel(n_jobs=12, verbose=True)(
-        delayed(_compute_one_difference)(dtm_lhd_file, dir, out_dir_difference, second_dir=second_dir)
-        for dtm_lhd_file in all_dtm_lhd_names
+        delayed(_compute_one_difference)(dtm_file, dir, out_dir_difference, second_dir=second_dir)
+        for dtm_file in all_dtm_names
     )
 
 
@@ -38,10 +38,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Calcul de cartes de différences par rapport au RGE ALTI")
     parser.add_argument(
         "-l",
-        "--dtm_lidar_dir",
+        "--primary_dtm_dir",
         type=Path,
         required=True,
-        help="Dossier des dalles MNT Lidar HD",
+        help="Dossier contenant le premier ensemble de dalles MNT pour le calcul de différence.",
     )
 
     parser.add_argument(
@@ -66,4 +66,4 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    compute_all_difference_maps(args.dtm_lidar_dir, args.secondary_dtm_elevation_dir, args.name_dir_difference)
+    compute_all_difference_maps(args.primary_dtm_dir, args.secondary_dtm_elevation_dir, args.name_dir_difference)

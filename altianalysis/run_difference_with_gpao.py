@@ -30,7 +30,10 @@ def create_one_job_one_difference(store: Store, dir_in: Path, second_dir: Path |
     job_name = f"difference_{input_file}"
     if second_dir:
         secondary_file = second_dir / input_file
-        assert os.path.exists(secondary_file), "Secondary elevation does not exist to compute difference !"
+
+        if not os.path.exists(secondary_file):
+            raise FileNotFoundError(f"Secondary elevation does not exist to compute difference for {input_file}")
+
         command = f"""
     docker run -t --rm --userns=host
     -v {store.to_unix(dir_in)}:/input
@@ -57,21 +60,21 @@ def create_one_job_one_difference(store: Store, dir_in: Path, second_dir: Path |
 
 
 def create_main_gpao_project(
-    dtms_lhd: Path,
+    primary_dir: Path,
     secondary_dir: Path | None,
     out: Path,
     store: Store,
     project_name: str,
 ) -> Project:
 
-    logging.debug(f"Create GPAO projects to compute difference maps with rge alti: {dtms_lhd}.")
+    logging.debug(f"Create GPAO projects to compute difference maps with rge alti: {primary_dir}.")
     logging.debug(f"Writing difference maps to {out}.")
 
     Project.reset()
 
     # get dtm tile names for lidar hd
 
-    dtm_tile_names = get_tile_names(dtms_lhd)
+    dtm_tile_names = get_tile_names(primary_dir)
 
     out.mkdir(parents=True, exist_ok=True)
 
@@ -80,7 +83,7 @@ def create_main_gpao_project(
     jobs = []
 
     for tile_ in dtm_tile_names:
-        job = create_one_job_one_difference(store, dtms_lhd, secondary_dir, tile_, out)
+        job = create_one_job_one_difference(store, primary_dir, secondary_dir, tile_, out)
         jobs.append(job)
 
     # create the project
@@ -120,9 +123,9 @@ gdal_translate \
 
 
 def create_gpao_projects(
-    dtms_lhd: Path, secondary_dir: Path | None, out: Path, store: Store, project_name: str, cog_filename: str
+    primary_dir: Path, secondary_dir: Path | None, out: Path, store: Store, project_name: str, cog_filename: str
 ) -> List[Project]:
-    project_main = create_main_gpao_project(dtms_lhd, secondary_dir, out, store, project_name)
+    project_main = create_main_gpao_project(primary_dir, secondary_dir, out, store, project_name)
     projects = [project_main]
     if cog_filename:
         project_cog = create_cog_gpao_project(
@@ -134,7 +137,7 @@ def create_gpao_projects(
 
 
 def compute_on_gpao(
-    dtms_lhd: Path,
+    primary_dir: Path,
     secondary_dir: Path | None,
     out: Path,
     gpao_hostname: str,
@@ -163,7 +166,7 @@ def compute_on_gpao(
 
     logging.debug(f"Local store path ({local_store_path}) converted to client store path ({runner_store_path})")
 
-    projects = create_gpao_projects(dtms_lhd, secondary_dir, out, store, project_name, cog_filename)
+    projects = create_gpao_projects(primary_dir, secondary_dir, out, store, project_name, cog_filename)
 
     builder = Builder(projects)
 
@@ -177,11 +180,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Calcul de cartes de différences par rapport au RGE ALTI")
     parser.add_argument(
         "-i",
-        "--dtm_lhd_dir",
+        "--primary_dtm_dir",
         type=Path,
-        # nargs="+",
         required=True,
-        help="Dossier des dalles MNT Lidar HD",
+        help="Dossier contenant le premier ensemble de dalles MNT pour le calcul de différence.",
     )
     parser.add_argument(
         "-ii",
@@ -234,7 +236,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     compute_on_gpao(
-        dtms_lhd=args.dtm_lhd_dir,
+        dtms_lhd=args.primary_dtm_dir,
         secondary_dir=args.secondary_dtm_dir,
         out=args.out,
         gpao_hostname=args.gpao_hostname,
