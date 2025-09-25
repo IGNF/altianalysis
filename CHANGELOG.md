@@ -1,5 +1,7 @@
 # master
 
+-feature: option to generate a COG when running with gpao
+
 # 1.1.0
 
 - refactor: rename python files to use english words
