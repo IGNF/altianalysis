@@ -65,7 +65,7 @@ def test_create_gpao_projects_without_cog():
 @pytest.mark.gpao
 def test_gpao_run_with_cog_stream_rge():
     dtm_lidar_lhds = "./data/lhd_dir_gpao"
-    output_dir = TMP_PATH / "gpao_run_with_cog"
+    output_dir = TMP_PATH / "gpao_run_with_cog_stream_rge"
     output_dir.mkdir()
     cog_filename = "cog.tif"
     project_name = "test_run_altianalysis_gpao"
@@ -124,7 +124,7 @@ def test_gpao_run_without_cog_stream_rge():
 def test_gpao_run_without_cog_given_secondary_folder():
     dtm_lidar_lhds = "./data/lhd_dir_gpao"
     secondary_dtm_dir = "./data/lhd_dir_gpao"
-    output_dir = TMP_PATH / "gpao_run"
+    output_dir = TMP_PATH / "gpao_run_without_cog_given_secondary_folder"
     output_dir.mkdir()
     project_name = "test_run_altianalysis_gpao_secondary_folder"
 

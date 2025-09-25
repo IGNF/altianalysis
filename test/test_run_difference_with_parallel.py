@@ -15,8 +15,8 @@ def setup_module(module):
     os.makedirs(TMP_PATH)
 
 
-def test_compute_all_difference_maps():
-    output_dir = TMP_PATH / "compute_all_difference_maps"
+def test_compute_all_difference_maps_with_stream():
+    output_dir = TMP_PATH / "compute_all_difference_maps_with_stream"
     output_dir.mkdir()
     dtm_lidar_dir = Path("./data/lhd_dir_gpao")
 
@@ -31,8 +31,13 @@ def test_compute_all_difference_maps():
                 lidar_dtm_file
             )
 
+
+def test_compute_all_difference_maps_with_secondary_folder():
     # second test with secondary folder of dtm files holding the same names
-    output_dir_with_sec = TMP_PATH / "compute_all_difference_maps"
+    output_dir_with_sec = TMP_PATH / "compute_all_difference_maps_with_secondary_folder"
+    output_dir_with_sec.mkdir()
+
+    dtm_lidar_dir = Path("./data/lhd_dir_gpao")
     sec_dtm_dir = Path("./data/lhd_dir_gpao")
 
     run_difference_with_parallel.compute_all_difference_maps(dtm_lidar_dir, sec_dtm_dir, output_dir_with_sec)

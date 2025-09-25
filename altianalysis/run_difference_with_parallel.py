@@ -11,25 +11,25 @@ def _compute_one_difference(dtm_lhd_file: str, _dir: Path, _out_dir_difference: 
 
     full_dtm_file = os.path.join(_dir, dtm_lhd_file)
     full_difference_file = os.path.join(_out_dir_difference, dtm_lhd_file)
-    _second_file = None
+    second_file = None
 
-    if second_dir is not None:
-        _second_file = os.path.join(second_dir, dtm_lhd_file)
+    if second_dir:
+        second_file = os.path.join(second_dir, dtm_lhd_file)
 
-    main(full_dtm_file, _second_file, full_difference_file)
+    main(full_dtm_file, second_file, full_difference_file)
 
 
-def compute_all_difference_maps(_dir: Path, _second_dir: Path | None, _out_dir_difference: Path):
+def compute_all_difference_maps(dir: Path, second_dir: Path | None, out_dir_difference: Path):
 
-    os.makedirs(_out_dir_difference, exist_ok=True)
+    os.makedirs(out_dir_difference, exist_ok=True)
     all_dtm_lhd_names = []
-    for dtm_file in _dir.iterdir():
+    for dtm_file in dir.iterdir():
         if dtm_file.is_file() and (str(dtm_file).endswith(".tif") or str(dtm_file).endswith(".TIF")):
             all_dtm_lhd_names.append(dtm_file.name)
 
     # bulk compute
     _ = Parallel(n_jobs=12, verbose=True)(
-        delayed(_compute_one_difference)(dtm_lhd_file, _dir, _out_dir_difference, second_dir=_second_dir)
+        delayed(_compute_one_difference)(dtm_lhd_file, dir, out_dir_difference, second_dir=second_dir)
         for dtm_lhd_file in all_dtm_lhd_names
     )
 
@@ -49,7 +49,8 @@ def parse_args():
         "--secondary_dtm_elevation_dir",
         type=Path,
         default=None,
-        help="Dossier contenant le second ensemble de dalles MNT pour le calcul de différence",
+        help="Dossier contenant le second ensemble de dalles MNT pour le calcul de différence. "
+        "Les dalles d'élévation doivent avoir les mêmes noms pour faire l'appariement",
     )
 
     parser.add_argument(

@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 from pathlib import Path, PurePosixPath
 from typing import List
 
@@ -27,26 +28,28 @@ def get_tile_names(folder: Path) -> List[str]:
 
 def create_one_job_one_difference(store: Store, dir_in: Path, second_dir: Path | None, input_file: str, output: Path):
     job_name = f"difference_{input_file}"
-    if second_dir is not None:
+    if second_dir:
+        secondary_file = second_dir / input_file
+        assert os.path.exists(secondary_file), "Secondary elevation does not exist to compute difference !"
         command = f"""
-    docker run -t --rm --userns=host --shm-size=2gb
+    docker run -t --rm --userns=host
     -v {store.to_unix(dir_in)}:/input
     -v {store.to_unix(second_dir)}:/second_input
     -v {store.to_unix(output)}:/output
     ghcr.io/ignf/altianalysis:{__version__}
     python -m altianalysis.compute_difference
-    --dtm_lidar_file /input/{input_file}
+    --primary_elevation_file /input/{input_file}
     --second_elevation_file /second_input/{input_file}
     --name_save_out /output/{input_file}
     """
     else:
         command = f"""
-    docker run -t --rm --userns=host --shm-size=2gb
+    docker run -t --rm --userns=host
     -v {store.to_unix(dir_in)}:/input
     -v {store.to_unix(output)}:/output
     ghcr.io/ignf/altianalysis:{__version__}
     python -m altianalysis.compute_difference
-    --dtm_lidar_file /input/{input_file}
+    --primary_elevation_file /input/{input_file}
     --name_save_out /output/{input_file}
     """
     job = Job(job_name, command, tags=["docker"])
@@ -181,11 +184,12 @@ def parse_args():
         help="Dossier des dalles MNT Lidar HD",
     )
     parser.add_argument(
-        "-i",
+        "-ii",
         "--secondary_dtm_dir",
         type=Path,
         default=None,
-        help="Dossier du second des MNT pour calculer la différence",
+        help="Dossier contenant le second ensemble de dalles MNT pour le calcul de différence. "
+        "Les dalles d'élévation doivent avoir les mêmes noms pour faire l'appariement",
     )
 
     parser.add_argument(

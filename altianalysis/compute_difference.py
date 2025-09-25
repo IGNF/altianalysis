@@ -11,10 +11,16 @@ from rasterio.enums import Resampling
 
 
 def parse_args():
-    parser = argparse.ArgumentParser("compute difference map between lidar dtm and rge alti")
-    parser.add_argument("--dtm_lidar_file", type=str, help="dtm lidar tif file")
+    parser = argparse.ArgumentParser(
+        "compute difference between two elevation files or between one elevation file and rge alti"
+    )
+    parser.add_argument("--primary_elevation_file", type=str, help="dtm lidar tif file")
     parser.add_argument(
-        "--second_elevation_file", default=None, type=str, help="secondary elevation file when no stream to be used !"
+        "--second_elevation_file",
+        default=None,
+        type=str,
+        help="secondary elevation file to compare with primary elevation file. "
+        "If not provided, primary elevation file is compared with rge alti (1 meter) data stream",
     )
     parser.add_argument("--name_save_out", type=str, help="name of difference file")
     return parser.parse_args()
@@ -113,4 +119,4 @@ def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args.dtm_lidar_file, args.second_elevation_file, args.name_save_out)
+    main(args.primary_elevation_file, args.second_elevation_file, args.name_save_out)
