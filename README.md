@@ -46,17 +46,30 @@ conda activate altianalysis
 
 ## Utilisation sur un seul fichier tif
 
-Lancer l'utilitaire avec la commande suivante :
+Lancer l'utilitaire avec la commande suivante si vous disposez de deux sources de MNT pour calculer la différence :
 
 ```bash
 python -m altianalysis.compute_difference \
-    --dtm_lidar_file <DTM_LIDAR_FILE> \
-    --name_save_out <NAME_SAVE_OUT>
+--primary_elevation_file <FIRST_DTM_FILE> \
+--second_elevation_file <SECOND_DTM_FILE> \
+--name_save_out <NAME_SAVE_OUT>
+```
+
+Dans le cas où vous voudriez calculer la carte de différence entre un MNT et le RGE Alti: 
+
+```bash
+python -m altianalysis.compute_difference \
+--primary_elevation_file <FIRST_DTM_FILE> \
+--name_save_out <NAME_SAVE_OUT>
 ```
 
 options:
-  * --dtm_lidar_file DTM_LIDAR_FILE
-                        Chemin vers in fichier tif pour lequel on veut calculer la différence avec le RGE Alti
+  * --primary_elevation_file FIRST_DTM_FILE
+                        Chemin vers le permier MNT
+
+  * --second_elevation_file SECOND_DTM_FILE
+                        Chemin vers le deuxième MNT  
+
   * --name_save_out NAME_SAVE_OUT
                         Chemin vers le fichier tif de sortie (carte de différence)
 
@@ -64,11 +77,13 @@ options:
 
 ## Utilisation pour un batch en utilisant la [GPAO](https://github.com/ign-gpao/)
 
-Lancer l'utilitaire avec la commande suivante :
+Lancer l'utilitaire avec la commande suivante si vous disposez de deux dossiers contenant des MNT dont vous voudriez calculer la différence:
+NB. Les fichiers doivent avoir les mêmes noms pour être appariés.
 
 ```bash
 python -m altianalysis.run_difference_with_gpao \
-    -i <DTM_LHD_DIR> \
+    -i <FIRST_DTM_DIR> \
+    -ii <SECOND_DTM_DIR> \
     -o <OUT> \
     -l <LOCAL_STORE_PATH> \
     -s <RUNNER_STORE_PATH> \
@@ -77,10 +92,26 @@ python -m altianalysis.run_difference_with_gpao \
     [-c <COG_FILENAME>]
 ```
 
+Pour calculer des cartes de différences par rapport au flux RGE Alti: 
+
+```bash
+python -m altianalysis.run_difference_with_gpao \
+    -i <FIRST_DTM_DIR> \
+    -o <OUT> \
+    -l <LOCAL_STORE_PATH> \
+    -s <RUNNER_STORE_PATH> \
+    [-g <GPAO_HOSTNAME>] \
+    [-p <PROJECT_NAME>] \
+    [-c <COG_FILENAME>]
+```
+
+
 options:
   * -h, --help            show this help message and exit
-  * -i DTM_LHD_DIR, --dtm_lhd_dir DTM_LHD_DIR
-                        Dossier des dalles MNT Lidar HD
+  * -i FIRST_DTM_DIR, --primary_dtm_dir FIRST_DTM_DIR
+                        Dossier contenant le permier set de  MNTs
+  * -ii SECOND_DTM_DIR, --secondary_dtm_dir SECOND_DTM_DIR
+                        Dossier contenant le deuxième set de  MNTs  ( s'il existe )
   * -o OUT, --out OUT     Dossier de sortie où seront sauvegardées les cartes de
                         differences
   * -l LOCAL_STORE_PATH, --local_store_path LOCAL_STORE_PATH
