@@ -68,7 +68,7 @@ def create_main_gpao_project(
 
     if secondary_dir:
         logging.debug(
-            f"Create GPAO projects to compute difference maps file by file between : \
+            f"Create GPAO projects to compute difference maps file by file between: \
             {primary_dir} and {secondary_dir}.Note that files are matched by names."
         )
     else:
