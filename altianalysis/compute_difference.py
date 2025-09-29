@@ -37,8 +37,8 @@ def _extract_rge_alti_tile_from_stream(
 ):
 
     # compute dtm lidar extent while reading with rasterio
-    with rasterio.open(dtm_file) as dtm_lhd:
-        bounds = dtm_lhd.bounds
+    with rasterio.open(dtm_file) as dtm:
+        bounds = dtm.bounds
         minx, miny, maxx, maxy = bounds.left, bounds.bottom, bounds.right, bounds.top
 
     try:

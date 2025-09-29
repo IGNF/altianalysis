@@ -46,11 +46,12 @@ def parse_args():
 
     parser.add_argument(
         "-s",
-        "--secondary_dtm_elevation_dir",
+        "--secondary_dtm_dir",
         type=Path,
         default=None,
         help="Dossier contenant le second ensemble de dalles MNT pour le calcul de différence. "
-        "Les dalles d'élévation doivent avoir les mêmes noms pour faire l'appariement",
+        "Les dalles d'élévation doivent avoir les mêmes noms pour faire l'appariement"
+        "S'il est laissé vide, les dalles du premier ensemble sont comparées au RGE Alti",
     )
 
     parser.add_argument(
@@ -66,4 +67,4 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    compute_all_difference_maps(args.primary_dtm_dir, args.secondary_dtm_elevation_dir, args.name_dir_difference)
+    compute_all_difference_maps(args.primary_dtm_dir, args.secondary_dtm_dir, args.name_dir_difference)

@@ -34,27 +34,26 @@ def create_one_job_one_difference(store: Store, dir_in: Path, second_dir: Path |
         if not os.path.exists(secondary_file):
             raise FileNotFoundError(f"Secondary elevation does not exist to compute difference for {input_file}")
 
-        command = f"""
-    docker run -t --rm --userns=host
-    -v {store.to_unix(dir_in)}:/input
-    -v {store.to_unix(second_dir)}:/second_input
-    -v {store.to_unix(output)}:/output
-    ghcr.io/ignf/altianalysis:{__version__}
-    python -m altianalysis.compute_difference
-    --primary_elevation_file /input/{input_file}
-    --second_elevation_file /second_input/{input_file}
-    --name_save_out /output/{input_file}
-    """
+        second_input_mount = f" -v {store.to_unix(second_dir)}:/second_input"
+        second_input_param = f"--second_elevation_file /second_input/{input_file}"
+
     else:
-        command = f"""
+
+        second_input_mount = ""
+        second_input_param = ""
+
+    command = f"""
     docker run -t --rm --userns=host
     -v {store.to_unix(dir_in)}:/input
+    {second_input_mount}
     -v {store.to_unix(output)}:/output
     ghcr.io/ignf/altianalysis:{__version__}
     python -m altianalysis.compute_difference
     --primary_elevation_file /input/{input_file}
+    {second_input_param}
     --name_save_out /output/{input_file}
     """
+
     job = Job(job_name, command, tags=["docker"])
     return job
 
@@ -67,7 +66,13 @@ def create_main_gpao_project(
     project_name: str,
 ) -> Project:
 
-    logging.debug(f"Create GPAO projects to compute difference maps with rge alti: {primary_dir}.")
+    if secondary_dir:
+        logging.debug(
+            f"Create GPAO projects to compute difference maps file by file between : \
+            {primary_dir} and {secondary_dir}.Note that files are matched by names."
+        )
+    else:
+        logging.debug(f"Create GPAO projects to compute difference maps with rge alti: {primary_dir}.")
     logging.debug(f"Writing difference maps to {out}.")
 
     Project.reset()
@@ -177,7 +182,10 @@ def compute_on_gpao(
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Calcul de cartes de différences par rapport au RGE ALTI")
+    parser = argparse.ArgumentParser(
+        description="Calcul de cartes de différences entre 2 sources de modèles numériques, "
+        "ou d'une source par rapport au RGE ALTI"
+    )
     parser.add_argument(
         "-i",
         "--primary_dtm_dir",
@@ -191,7 +199,8 @@ def parse_args():
         type=Path,
         default=None,
         help="Dossier contenant le second ensemble de dalles MNT pour le calcul de différence. "
-        "Les dalles d'élévation doivent avoir les mêmes noms pour faire l'appariement",
+        "Les dalles d'élévation doivent avoir les mêmes noms pour faire l'appariement"
+        "S'il est laissé vide, les dalles du premier ensemble sont comparées au RGE Alti",
     )
 
     parser.add_argument(
@@ -236,7 +245,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     compute_on_gpao(
-        dtms_lhd=args.primary_dtm_dir,
+        primary_dir=args.primary_dtm_dir,
         secondary_dir=args.secondary_dtm_dir,
         out=args.out,
         gpao_hostname=args.gpao_hostname,
