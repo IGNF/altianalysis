@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 from pathlib import Path, PurePosixPath
 from typing import List
 
@@ -25,36 +26,60 @@ def get_tile_names(folder: Path) -> List[str]:
     return filenames
 
 
-def create_one_job_one_difference(store: Store, dir_in: Path, input_file: str, output: Path):
+def create_one_job_one_difference(store: Store, dir_in: Path, second_dir: Path | None, input_file: str, output: Path):
     job_name = f"difference_{input_file}"
+    if second_dir:
+        secondary_file = second_dir / input_file
+
+        if not os.path.exists(secondary_file):
+            raise FileNotFoundError(f"Secondary elevation does not exist to compute difference for {input_file}")
+
+        second_input_mount = f" -v {store.to_unix(second_dir)}:/second_input"
+        second_input_param = f"--second_elevation_file /second_input/{input_file}"
+
+    else:
+
+        second_input_mount = ""
+        second_input_param = ""
+
     command = f"""
-docker run -t --rm --userns=host
--v {store.to_unix(dir_in)}:/input
--v {store.to_unix(output)}:/output
-ghcr.io/ignf/altianalysis:{__version__}
-python -m altianalysis.compute_difference
---dtm_lidar_file /input/{input_file}
---name_save_out /output/{input_file}
-"""
+    docker run -t --rm --userns=host
+    -v {store.to_unix(dir_in)}:/input
+    {second_input_mount}
+    -v {store.to_unix(output)}:/output
+    ghcr.io/ignf/altianalysis:{__version__}
+    python -m altianalysis.compute_difference
+    --primary_elevation_file /input/{input_file}
+    {second_input_param}
+    --name_save_out /output/{input_file}
+    """
+
     job = Job(job_name, command, tags=["docker"])
     return job
 
 
 def create_main_gpao_project(
-    dtms_lhd: Path,
+    primary_dir: Path,
+    secondary_dir: Path | None,
     out: Path,
     store: Store,
     project_name: str,
 ) -> Project:
 
-    logging.debug(f"Create GPAO projects to compute difference maps with rge alti: {dtms_lhd}.")
+    if secondary_dir:
+        logging.debug(
+            f"Create GPAO projects to compute difference maps file by file between: \
+            {primary_dir} and {secondary_dir}.Note that files are matched by names."
+        )
+    else:
+        logging.debug(f"Create GPAO projects to compute difference maps with rge alti: {primary_dir}.")
     logging.debug(f"Writing difference maps to {out}.")
 
     Project.reset()
 
     # get dtm tile names for lidar hd
 
-    dtm_tile_names = get_tile_names(dtms_lhd)
+    dtm_tile_names = get_tile_names(primary_dir)
 
     out.mkdir(parents=True, exist_ok=True)
 
@@ -63,7 +88,7 @@ def create_main_gpao_project(
     jobs = []
 
     for tile_ in dtm_tile_names:
-        job = create_one_job_one_difference(store, dtms_lhd, tile_, out)
+        job = create_one_job_one_difference(store, primary_dir, secondary_dir, tile_, out)
         jobs.append(job)
 
     # create the project
@@ -103,9 +128,9 @@ gdal_translate \
 
 
 def create_gpao_projects(
-    dtms_lhd: Path, out: Path, store: Store, project_name: str, cog_filename: str
+    primary_dir: Path, secondary_dir: Path | None, out: Path, store: Store, project_name: str, cog_filename: str
 ) -> List[Project]:
-    project_main = create_main_gpao_project(dtms_lhd, out, store, project_name)
+    project_main = create_main_gpao_project(primary_dir, secondary_dir, out, store, project_name)
     projects = [project_main]
     if cog_filename:
         project_cog = create_cog_gpao_project(
@@ -117,7 +142,8 @@ def create_gpao_projects(
 
 
 def compute_on_gpao(
-    dtms_lhd: Path,
+    primary_dir: Path,
+    secondary_dir: Path | None,
     out: Path,
     gpao_hostname: str,
     local_store_path: Path,
@@ -145,7 +171,7 @@ def compute_on_gpao(
 
     logging.debug(f"Local store path ({local_store_path}) converted to client store path ({runner_store_path})")
 
-    projects = create_gpao_projects(dtms_lhd, out, store, project_name, cog_filename)
+    projects = create_gpao_projects(primary_dir, secondary_dir, out, store, project_name, cog_filename)
 
     builder = Builder(projects)
 
@@ -156,15 +182,27 @@ def compute_on_gpao(
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Calcul de cartes de différences par rapport au RGE ALTI")
+    parser = argparse.ArgumentParser(
+        description="Calcul de cartes de différences entre 2 sources de modèles numériques, "
+        "ou d'une source par rapport au RGE ALTI"
+    )
     parser.add_argument(
         "-i",
-        "--dtm_lhd_dir",
+        "--primary_dtm_dir",
         type=Path,
-        # nargs="+",
         required=True,
-        help="Dossier des dalles MNT Lidar HD",
+        help="Dossier contenant le premier ensemble de dalles MNT pour le calcul de différence.",
     )
+    parser.add_argument(
+        "-ii",
+        "--secondary_dtm_dir",
+        type=Path,
+        default=None,
+        help="Dossier contenant le second ensemble de dalles MNT pour le calcul de différence. "
+        "Les dalles d'élévation doivent avoir les mêmes noms pour faire l'appariement"
+        "S'il est laissé vide, les dalles du premier ensemble sont comparées au RGE Alti",
+    )
+
     parser.add_argument(
         "-o",
         "--out",
@@ -207,7 +245,8 @@ if __name__ == "__main__":
     args = parse_args()
 
     compute_on_gpao(
-        dtms_lhd=args.dtm_lhd_dir,
+        primary_dir=args.primary_dtm_dir,
+        secondary_dir=args.secondary_dtm_dir,
         out=args.out,
         gpao_hostname=args.gpao_hostname,
         local_store_path=args.local_store_path,

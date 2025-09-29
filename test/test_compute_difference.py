@@ -161,13 +161,32 @@ def test_compute_difference_with_nodata():
         assert np.all(nodata_diff_mask[:, :-1, :-1] == nodata_combined), "Added or missed nodata values !"
 
 
-def test_main():
-    output_dir = TMP_PATH / "main"
+def test_main_with_stream():
+    output_dir = TMP_PATH / "main_with_stream"
     output_dir.mkdir()
     dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
 
     out_difference_file = output_dir / "Difference_with_rge_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
 
-    compute_difference.main(dtm_lidar_file, out_difference_file)
+    compute_difference.main(dtm_lidar_file, None, out_difference_file)
 
     assert os.path.exists(out_difference_file), "difference with rge alti not computed !"
+
+
+def test_main_with_secondary_folder():
+    output_dir = TMP_PATH / "main_with_secondary_folder"
+    output_dir.mkdir()
+    dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+
+    second_dtm_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+
+    out_difference_file_with_self = output_dir / "Difference_self_with_rge_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+
+    # run with secondary file
+    compute_difference.main(dtm_lidar_file, second_dtm_file, out_difference_file_with_self)
+
+    assert os.path.exists(out_difference_file_with_self), "difference with self is not computed"
+
+    with rasterio.open(out_difference_file_with_self) as o_diff_self:
+        diff = o_diff_self.read()
+        assert np.all(diff == 0), "difference with self yields non null values"
