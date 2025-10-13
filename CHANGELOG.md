@@ -1,4 +1,6 @@
 # master
+
+# 1.2.0
 -feature: handle two folders of DEMs for difference computation
 -feature: option to generate a COG when running with gpao
 
