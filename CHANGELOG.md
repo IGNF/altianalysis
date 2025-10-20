@@ -1,4 +1,5 @@
 # master
+-fix : handle URL with HTTPS (not only HTTP)
 
 # 1.2.0
 -feature: handle two folders of DEMs for difference computation
