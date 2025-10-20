@@ -178,7 +178,11 @@ def compute_on_gpao(
     builder.save_as_json(out / "gpao_project.json")
 
     logging.info(f"Send projects to gpao server: {gpao_hostname}")
-    builder.send_project_to_api(f"http://{gpao_hostname}:8080")
+
+    if not gpao_hostname.lower().startswith("http"):
+        builder.send_project_to_api(f"http://{gpao_hostname}:8080")
+    else:
+        builder.send_project_to_api(gpao_hostname)
 
 
 def parse_args():
