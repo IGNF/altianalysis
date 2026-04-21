@@ -23,13 +23,14 @@ def parse_args():
         "If not provided, primary elevation file is compared with rge alti (1 meter) data stream",
     )
     parser.add_argument("--name_save_out", type=str, help="name of difference file")
+    parser.add_argument("--use_lidarHD", action="store_true", help="use lidarHD data stream")
     return parser.parse_args()
 
 
-def _extract_rge_alti_tile_from_stream(
+def _extract_tiles_from_stream(
     dtm_file: str,
     output_path: str | Path,
-    stream_RGE="RGEALTI-MNT_PYR-ZIP_FXX_LAMB93_WMS",  # "ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES",
+    stream="RGEALTI-MNT_PYR-ZIP_FXX_LAMB93_WMS",  # "ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES",
     proj="2154",
     pixel_per_meter=1,
     timeout_second=300,
@@ -44,7 +45,7 @@ def _extract_rge_alti_tile_from_stream(
     try:
         download_image(
             proj,
-            layer=stream_RGE,
+            layer=stream,
             minx=minx,
             miny=miny,
             maxx=maxx,
@@ -100,16 +101,26 @@ def compute_difference_between_dtms(first_dtm_file: str, second_dtm_file: str, n
             dst.write(_difference, 1)
 
 
-def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, output_difference_file: Path | str):
+def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, output_difference_file: Path | str, use_lidarHD: bool = False):
 
     if secondary_dtm_file:
         compute_difference_between_dtms(reference_dtm_file, secondary_dtm_file, output_difference_file)
+
+    elif use_lidarHD:
+
+        with tempfile.NamedTemporaryFile(suffix="_dtm_lidarHD.tif", delete=False) as tmp_lidarHD:
+            success = _extract_tiles_from_stream(
+                reference_dtm_file, pixel_per_meter=5, output_path=tmp_lidarHD.name, stream="IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.LAMB93"
+            )
+
+            if success:
+                compute_difference_between_dtms(reference_dtm_file, tmp_lidarHD, output_difference_file)
 
     else:
 
         with tempfile.NamedTemporaryFile(suffix="_dtm_rgealti.tif", delete=False) as tmp_rge:
 
-            success = _extract_rge_alti_tile_from_stream(
+            success = _extract_tiles_from_stream(
                 reference_dtm_file, pixel_per_meter=5, output_path=tmp_rge.name
             )
 
@@ -119,4 +130,4 @@ def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args.primary_elevation_file, args.second_elevation_file, args.name_save_out)
+    main(args.primary_elevation_file, args.second_elevation_file, args.name_save_out, args.use_lidarHD)

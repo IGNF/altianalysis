@@ -24,7 +24,7 @@ def test_extract_rge_alti_tile_from_stream():
     output_dir.mkdir()
     dtm_rge_alti = output_dir / "dtm_rge_alti.tif"
     dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
-    compute_difference._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
+    compute_difference._extract_tiles_from_stream(dtm_lidar_file, dtm_rge_alti)
 
     # read dtm rge alti and dtm_lidar_file and check bounds
     with rasterio.open(dtm_lidar_file) as dtm_lidar, rasterio.open(dtm_rge_alti) as dtm_rge:
@@ -38,6 +38,26 @@ def test_extract_rge_alti_tile_from_stream():
             {bounds_dtm_lidar.right}, {bounds_dtm_lidar.bottom}, {bounds_dtm_lidar.top}), \
                 rge dtm has ({bounds_dtm_rge.left}, {bounds_dtm_rge.right}, {bounds_dtm_rge.bottom}, \
                     {bounds_dtm_rge.top})"
+
+
+def test_extract_lidarHD_tile_from_stream():
+    output_dir = TMP_PATH / "extract_lidarHD_tile_from_stream"
+    output_dir.mkdir()
+    dtm_output_file = output_dir / "dtm_lidarHD.tif"
+    dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+    compute_difference._extract_tiles_from_stream(dtm_lidar_file, dtm_output_file, stream="IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.LAMB93")
+
+    # read lidarHD file and check bounds
+    with rasterio.open(dtm_lidar_file) as dtm_lidar, rasterio.open(dtm_output_file) as dtm_output:
+        bounds_dtm_lidar = dtm_lidar.bounds
+        bounds_dtm_output = dtm_output.bounds
+
+        assert (
+            bounds_dtm_lidar == bounds_dtm_output
+        ), f"tiles extents are not matching: lidar dtm has ({bounds_dtm_lidar.left}, \
+            {bounds_dtm_lidar.right}, {bounds_dtm_lidar.bottom}, {bounds_dtm_lidar.top}), \
+                lidarHD dtm has ({bounds_dtm_output.left}, {bounds_dtm_output.right}, {bounds_dtm_output.bottom}, \
+                    {bounds_dtm_output.top})"
 
 
 def test_compute_difference_between_dtms_with_self():
@@ -61,7 +81,7 @@ def test_compute_difference_and_reconstruct():
     dtm_rge_alti = output_dir / "dtm_rge_alti.tif"
     out_difference_file = output_dir / "Difference_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
     out_recomputed_lidar_file = output_dir / "Rebuilt_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
-    compute_difference._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
+    compute_difference._extract_tiles_from_stream(dtm_lidar_file, dtm_rge_alti)
     compute_difference.compute_difference_between_dtms(dtm_lidar_file, dtm_rge_alti, out_difference_file)
 
     # read files and check if we can reconstruct initial lidar image
@@ -115,7 +135,7 @@ def test_compute_difference_with_nodata():
     # lidar dtm with nodata
     dtm_lidar_file = "./data/lhd/Semis_2021_0485_6196_LA93_IGN69_50CM.tif"
     dtm_rge_alti = output_dir / "dtm_rge_alti.tif"
-    compute_difference._extract_rge_alti_tile_from_stream(dtm_lidar_file, dtm_rge_alti)
+    compute_difference._extract_tiles_from_stream(dtm_lidar_file, dtm_rge_alti)
     out_difference_file = output_dir / "Difference_Semis_2021_0485_6196_LA93_IGN69_50CM.tif"
     compute_difference.compute_difference_between_dtms(dtm_lidar_file, dtm_rge_alti, out_difference_file)
 
@@ -190,3 +210,15 @@ def test_main_with_secondary_folder():
     with rasterio.open(out_difference_file_with_self) as o_diff_self:
         diff = o_diff_self.read()
         assert np.all(diff == 0), "difference with self yields non null values"
+
+
+def test_main_with_lidarHD():
+    output_dir = TMP_PATH / "main_with_lidarHD"
+    output_dir.mkdir()
+    dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+
+    out_difference_file = output_dir / "Difference_with_lidarHD_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+
+    compute_difference.main(dtm_lidar_file, None, out_difference_file, use_lidarHD=True)
+
+    assert os.path.exists(out_difference_file), "difference with lidarHD not computed !"
