@@ -188,7 +188,7 @@ def test_main_with_stream():
 
     out_difference_file = output_dir / "Difference_with_rge_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
 
-    compute_difference.main(dtm_lidar_file, None, out_difference_file)
+    compute_difference.main(dtm_lidar_file, None, out_difference_file, stream_type="RGEALTI")
 
     assert os.path.exists(out_difference_file), "difference with rge alti not computed !"
 
@@ -219,6 +219,6 @@ def test_main_with_lidarHD():
 
     out_difference_file = output_dir / "Difference_with_lidarHD_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
 
-    compute_difference.main(dtm_lidar_file, None, out_difference_file, use_lidarHD=True)
+    compute_difference.main(dtm_lidar_file, None, out_difference_file, stream_type="LIDARHD")
 
     assert os.path.exists(out_difference_file), "difference with lidarHD not computed !"

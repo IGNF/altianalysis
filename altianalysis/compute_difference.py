@@ -23,7 +23,7 @@ def parse_args():
         "If not provided, primary elevation file is compared with rge alti (1 meter) data stream",
     )
     parser.add_argument("--name_save_out", type=str, help="name of difference file")
-    parser.add_argument("--use_lidarHD", action="store_true", help="use lidarHD data stream")
+    parser.add_argument("--stream_type", action="store_true", help="type of stream to use (RGEALTI or LIDARHD)")
     return parser.parse_args()
 
 
@@ -101,31 +101,45 @@ def compute_difference_between_dtms(first_dtm_file: str, second_dtm_file: str, n
             dst.write(_difference, 1)
 
 
-def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, output_difference_file: Path | str, use_lidarHD: bool = False):
+def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, output_difference_file: Path | str, stream_type: str = None):
 
     if secondary_dtm_file:
         compute_difference_between_dtms(reference_dtm_file, secondary_dtm_file, output_difference_file)
 
-    elif use_lidarHD:
-
-        with tempfile.NamedTemporaryFile(suffix="_dtm_lidarHD.tif", delete=False) as tmp_lidarHD:
-            success = _extract_tiles_from_stream(
-                reference_dtm_file, pixel_per_meter=5, output_path=tmp_lidarHD.name, stream="IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.LAMB93"
-            )
-
-            if success:
-                compute_difference_between_dtms(reference_dtm_file, tmp_lidarHD, output_difference_file)
-
     else:
+        with open("data/stream_types.txt", "r") as f:
+            for l in f:
+                if stream_type in l:
+                    stream_value = l.split(" ")[1]
 
-        with tempfile.NamedTemporaryFile(suffix="_dtm_rgealti.tif", delete=False) as tmp_rge:
-
+        with tempfile.NamedTemporaryFile(suffix="_dtm_temp.tif", delete=False) as tmp:
             success = _extract_tiles_from_stream(
-                reference_dtm_file, pixel_per_meter=5, output_path=tmp_rge.name
+                reference_dtm_file, pixel_per_meter=5, output_path=tmp.name, stream=stream_value
             )
 
             if success:
-                compute_difference_between_dtms(reference_dtm_file, tmp_rge, output_difference_file)
+                compute_difference_between_dtms(reference_dtm_file, tmp, output_difference_file)
+
+    # elif use_lidarHD:
+
+    #     with tempfile.NamedTemporaryFile(suffix="_dtm_lidarHD.tif", delete=False) as tmp_lidarHD:
+    #         success = _extract_tiles_from_stream(
+    #             reference_dtm_file, pixel_per_meter=5, output_path=tmp_lidarHD.name, stream="IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.LAMB93"
+    #         )
+
+    #         if success:
+    #             compute_difference_between_dtms(reference_dtm_file, tmp_lidarHD, output_difference_file)
+
+    # else:
+
+    #     with tempfile.NamedTemporaryFile(suffix="_dtm_rgealti.tif", delete=False) as tmp_rge:
+
+    #         success = _extract_tiles_from_stream(
+    #             reference_dtm_file, pixel_per_meter=5, output_path=tmp_rge.name
+    #         )
+
+    #         if success:
+    #             compute_difference_between_dtms(reference_dtm_file, tmp_rge, output_difference_file)
 
 
 if __name__ == "__main__":
