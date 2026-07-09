@@ -144,4 +144,4 @@ def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args.primary_elevation_file, args.second_elevation_file, args.name_save_out, args.use_lidarHD)
+    main(args.primary_elevation_file, args.second_elevation_file, args.name_save_out, args.stream_type)
