@@ -87,8 +87,6 @@ def compute_difference_between_dtms(first_dtm_file: str, second_dtm_file: str, n
             fill_value=0,
         )
 
-        # data_dtm_rge_windowed=np.where(data_dtm_rge_windowed==dtm_rge.nodata, 0,data_dtm_rge_windowed)
-
         # difference dem
         _difference = data_dtm_1 - data_dtm_2_windowed
 
@@ -119,27 +117,6 @@ def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, 
 
             if success:
                 compute_difference_between_dtms(reference_dtm_file, tmp, output_difference_file)
-
-    # elif use_lidarHD:
-
-    #     with tempfile.NamedTemporaryFile(suffix="_dtm_lidarHD.tif", delete=False) as tmp_lidarHD:
-    #         success = _extract_tiles_from_stream(
-    #             reference_dtm_file, pixel_per_meter=5, output_path=tmp_lidarHD.name, stream="IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.LAMB93"
-    #         )
-
-    #         if success:
-    #             compute_difference_between_dtms(reference_dtm_file, tmp_lidarHD, output_difference_file)
-
-    # else:
-
-    #     with tempfile.NamedTemporaryFile(suffix="_dtm_rgealti.tif", delete=False) as tmp_rge:
-
-    #         success = _extract_tiles_from_stream(
-    #             reference_dtm_file, pixel_per_meter=5, output_path=tmp_rge.name
-    #         )
-
-    #         if success:
-    #             compute_difference_between_dtms(reference_dtm_file, tmp_rge, output_difference_file)
 
 
 if __name__ == "__main__":

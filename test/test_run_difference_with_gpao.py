@@ -27,7 +27,7 @@ def test_create_main_gpao_project():
     output_dir = TMP_PATH / "create_main_gpao_project"
     dtm_lidar_lhds = Path("./data/lhd_dir_gpao")
     project_name = "test_create_gpao_project_difference_with_dem_rge_alti"
-    project = run_difference_with_gpao.create_main_gpao_project(dtm_lidar_lhds, None, output_dir, STORE, project_name, False)
+    project = run_difference_with_gpao.create_main_gpao_project(dtm_lidar_lhds, None, output_dir, STORE, project_name, "RGEALTI")
 
     assert project is not None
 
@@ -43,7 +43,7 @@ def test_create_gpao_projects_with_cog():
     cog_filename = "cog.tif"
     project_name = "test_create_gpao_project_difference_with_dem_rge_alti"
     projects = run_difference_with_gpao.create_gpao_projects(
-        dtm_lidar_lhds, None, output_dir, STORE, project_name, cog_filename, False
+        dtm_lidar_lhds, None, output_dir, STORE, project_name, cog_filename, "RGEALTI"
     )
 
     assert len(projects) == 2
@@ -56,7 +56,7 @@ def test_create_gpao_projects_without_cog():
     output_dir = TMP_PATH / "create_gpao_projects_without_cog"
     dtm_lidar_lhds = Path("./data/lhd_dir_gpao")
     project_name = "test_create_gpao_project_difference_with_dem_rge_alti"
-    projects = run_difference_with_gpao.create_gpao_projects(dtm_lidar_lhds, None, output_dir, STORE, project_name, "", False)
+    projects = run_difference_with_gpao.create_gpao_projects(dtm_lidar_lhds, None, output_dir, STORE, project_name, "", "RGEALTI")
 
     assert len(projects) == 1
     assert len(projects[0].jobs) == 5
