@@ -1,4 +1,5 @@
 import argparse
+import json
 import tempfile
 import warnings
 from pathlib import Path
@@ -23,7 +24,12 @@ def parse_args():
         "If not provided, primary elevation file is compared with rge alti (1 meter) data stream",
     )
     parser.add_argument("--name_save_out", type=str, help="name of difference file")
-    parser.add_argument("--stream_type", action="store_true", help="type of stream to use (RGEALTI or LIDARHD)")
+    parser.add_argument(
+        "--stream_type",
+        type=str,
+        default="RGEALTI",
+        help="type of stream to use (RGEALTI or LIDARHD)",
+    )
     return parser.parse_args()
 
 
@@ -105,10 +111,9 @@ def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, 
         compute_difference_between_dtms(reference_dtm_file, secondary_dtm_file, output_difference_file)
 
     else:
-        with open("data/stream_types.txt", "r") as f:
-            for l in f:
-                if stream_type in l:
-                    stream_value = l.split(" ")[1]
+        with open("data/stream_types.json", "r") as f:
+            stream_types = json.load(f)
+        stream_value = stream_types[stream_type]
 
         with tempfile.NamedTemporaryFile(suffix="_dtm_temp.tif", delete=False) as tmp:
             success = _extract_tiles_from_stream(
