@@ -113,11 +113,14 @@ def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, 
     else:
         with open("data/stream_types.json", "r") as f:
             stream_types = json.load(f)
-        stream_value = stream_types[stream_type]
+        stream_config = stream_types[stream_type]
 
         with tempfile.NamedTemporaryFile(suffix="_dtm_temp.tif", delete=False) as tmp:
             success = _extract_tiles_from_stream(
-                reference_dtm_file, pixel_per_meter=5, output_path=tmp.name, stream=stream_value
+                reference_dtm_file,
+                pixel_per_meter=stream_config["pixel_per_meter"],
+                output_path=tmp.name,
+                stream=stream_config["stream"],
             )
 
             if success:
