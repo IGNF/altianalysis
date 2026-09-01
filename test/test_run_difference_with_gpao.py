@@ -135,6 +135,7 @@ def test_gpao_run_without_cog_given_secondary_folder():
     runner_store_path = Path(dtm_lidar_lhds).resolve()
     local_store_path = Path("data/lhd_dir_gpao").resolve()
 
+
     run_difference_with_gpao.compute_on_gpao(
         Path(dtm_lidar_lhds),
         Path(secondary_dtm_dir),
