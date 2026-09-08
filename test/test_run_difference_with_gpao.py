@@ -79,7 +79,7 @@ def test_gpao_run_with_cog_stream_rge():
     run_difference_with_gpao.compute_on_gpao(
         Path(dtm_lidar_lhds),
         None,
-        False,
+        "RGEALTI",
         Path(output_dir),
         gpao_hostname,
         local_store_path,
