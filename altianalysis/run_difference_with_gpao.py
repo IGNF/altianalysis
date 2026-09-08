@@ -42,7 +42,7 @@ def create_one_job_one_difference(store: Store, dir_in: Path, second_dir: Path |
         second_input_mount = ""
         second_input_param = ""
 
-    stream_type_param = f"--stream_type {stream_type}"
+    # stream_type_param = f"--stream_type {stream_type}"
 
     command = f"""
     docker run -t --rm --userns=host
@@ -53,7 +53,6 @@ def create_one_job_one_difference(store: Store, dir_in: Path, second_dir: Path |
     python -m altianalysis.compute_difference
     --primary_elevation_file /input/{input_file}
     {second_input_param}
-    {stream_type_param}
     --name_save_out /output/{input_file}
     """
 
