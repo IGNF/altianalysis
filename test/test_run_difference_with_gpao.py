@@ -27,7 +27,9 @@ def test_create_main_gpao_project():
     output_dir = TMP_PATH / "create_main_gpao_project"
     dtm_lidar_lhds = Path("./data/lhd_dir_gpao")
     project_name = "test_create_gpao_project_difference_with_dem_rge_alti"
-    project = run_difference_with_gpao.create_main_gpao_project(dtm_lidar_lhds, None, output_dir, STORE, project_name)
+    project = run_difference_with_gpao.create_main_gpao_project(
+        dtm_lidar_lhds, None, output_dir, STORE, project_name, "RGEALTI"
+    )
 
     assert project is not None
 
@@ -43,7 +45,7 @@ def test_create_gpao_projects_with_cog():
     cog_filename = "cog.tif"
     project_name = "test_create_gpao_project_difference_with_dem_rge_alti"
     projects = run_difference_with_gpao.create_gpao_projects(
-        dtm_lidar_lhds, None, output_dir, STORE, project_name, cog_filename
+        dtm_lidar_lhds, None, output_dir, STORE, project_name, cog_filename, "RGEALTI"
     )
 
     assert len(projects) == 2
@@ -56,7 +58,9 @@ def test_create_gpao_projects_without_cog():
     output_dir = TMP_PATH / "create_gpao_projects_without_cog"
     dtm_lidar_lhds = Path("./data/lhd_dir_gpao")
     project_name = "test_create_gpao_project_difference_with_dem_rge_alti"
-    projects = run_difference_with_gpao.create_gpao_projects(dtm_lidar_lhds, None, output_dir, STORE, project_name, "")
+    projects = run_difference_with_gpao.create_gpao_projects(
+        dtm_lidar_lhds, None, output_dir, STORE, project_name, "", "RGEALTI"
+    )
 
     assert len(projects) == 1
     assert len(projects[0].jobs) == 5
@@ -68,7 +72,7 @@ def test_gpao_run_with_cog_stream_rge():
     output_dir = TMP_PATH / "gpao_run_with_cog_stream_rge"
     output_dir.mkdir()
     cog_filename = "cog.tif"
-    project_name = "test_run_altianalysis_gpao"
+    project_name = "test_run_altianalysis_gpao_stream_rge"
 
     gpao_hostname = os.environ.get("GPAO_API_URL", "localhost")
     url_api = f"http://{gpao_hostname}:8080/api/"
@@ -79,6 +83,7 @@ def test_gpao_run_with_cog_stream_rge():
     run_difference_with_gpao.compute_on_gpao(
         Path(dtm_lidar_lhds),
         None,
+        "RGEALTI",
         Path(output_dir),
         gpao_hostname,
         local_store_path,
@@ -99,11 +104,11 @@ def test_gpao_run_with_cog_stream_rge():
 
 
 @pytest.mark.gpao
-def test_gpao_run_without_cog_stream_rge():
+def test_gpao_run_without_cog_stream_lidarhd():
     dtm_lidar_lhds = "./data/lhd_dir_gpao"
-    output_dir = TMP_PATH / "gpao_run_without_cog_stream_rge"
+    output_dir = TMP_PATH / "gpao_run_without_cog_stream_lidarhd"
     output_dir.mkdir()
-    project_name = "test_run_altianalysis_gpao_stream"
+    project_name = "test_run_altianalysis_gpao_stream_lidarhd"
 
     gpao_hostname = os.environ.get("GPAO_API_URL", "localhost")
     url_api = f"http://{gpao_hostname}:8080/api/"
@@ -112,7 +117,14 @@ def test_gpao_run_without_cog_stream_rge():
     local_store_path = Path("data/lhd_dir_gpao").resolve()
 
     run_difference_with_gpao.compute_on_gpao(
-        Path(dtm_lidar_lhds), None, Path(output_dir), gpao_hostname, local_store_path, runner_store_path, project_name
+        Path(dtm_lidar_lhds),
+        None,
+        "LIDARHD",
+        Path(output_dir),
+        gpao_hostname,
+        local_store_path,
+        runner_store_path,
+        project_name,
     )
 
     if gpao_hostname == "localhost":
@@ -137,6 +149,7 @@ def test_gpao_run_without_cog_given_secondary_folder():
     run_difference_with_gpao.compute_on_gpao(
         Path(dtm_lidar_lhds),
         Path(secondary_dtm_dir),
+        False,
         Path(output_dir),
         gpao_hostname,
         local_store_path,

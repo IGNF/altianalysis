@@ -1,4 +1,5 @@
 import argparse
+import json
 import tempfile
 import warnings
 from pathlib import Path
@@ -23,13 +24,19 @@ def parse_args():
         "If not provided, primary elevation file is compared with rge alti (1 meter) data stream",
     )
     parser.add_argument("--name_save_out", type=str, help="name of difference file")
+    parser.add_argument(
+        "--stream_type",
+        type=str,
+        default="RGEALTI",
+        help="type of stream to use (RGEALTI or LIDARHD)",
+    )
     return parser.parse_args()
 
 
-def _extract_rge_alti_tile_from_stream(
+def _extract_tiles_from_stream(
     dtm_file: str,
     output_path: str | Path,
-    stream_RGE="RGEALTI-MNT_PYR-ZIP_FXX_LAMB93_WMS",  # "ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES",
+    stream="RGEALTI-MNT_PYR-ZIP_FXX_LAMB93_WMS",  # "ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES",
     proj="2154",
     pixel_per_meter=1,
     timeout_second=300,
@@ -44,7 +51,7 @@ def _extract_rge_alti_tile_from_stream(
     try:
         download_image(
             proj,
-            layer=stream_RGE,
+            layer=stream,
             minx=minx,
             miny=miny,
             maxx=maxx,
@@ -86,8 +93,6 @@ def compute_difference_between_dtms(first_dtm_file: str, second_dtm_file: str, n
             fill_value=0,
         )
 
-        # data_dtm_rge_windowed=np.where(data_dtm_rge_windowed==dtm_rge.nodata, 0,data_dtm_rge_windowed)
-
         # difference dem
         _difference = data_dtm_1 - data_dtm_2_windowed
 
@@ -100,23 +105,28 @@ def compute_difference_between_dtms(first_dtm_file: str, second_dtm_file: str, n
             dst.write(_difference, 1)
 
 
-def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, output_difference_file: Path | str):
+def main(reference_dtm_file: Path | str, secondary_dtm_file: Path | str | None, output_difference_file: Path | str, stream_type: str = None):
 
     if secondary_dtm_file:
         compute_difference_between_dtms(reference_dtm_file, secondary_dtm_file, output_difference_file)
 
     else:
+        with open("data/stream_types.json", "r") as f:
+            stream_types = json.load(f)
+        stream_config = stream_types[stream_type]
 
-        with tempfile.NamedTemporaryFile(suffix="_dtm_rgealti.tif", delete=False) as tmp_rge:
-
-            success = _extract_rge_alti_tile_from_stream(
-                reference_dtm_file, pixel_per_meter=5, output_path=tmp_rge.name
+        with tempfile.NamedTemporaryFile(suffix="_dtm_temp.tif", delete=False) as tmp:
+            success = _extract_tiles_from_stream(
+                reference_dtm_file,
+                pixel_per_meter=stream_config["pixel_per_meter"],
+                output_path=tmp.name,
+                stream=stream_config["stream"],
             )
 
             if success:
-                compute_difference_between_dtms(reference_dtm_file, tmp_rge, output_difference_file)
+                compute_difference_between_dtms(reference_dtm_file, tmp, output_difference_file)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args.primary_elevation_file, args.second_elevation_file, args.name_save_out)
+    main(args.primary_elevation_file, args.second_elevation_file, args.name_save_out, args.stream_type)

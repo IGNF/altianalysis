@@ -20,7 +20,7 @@ def test_compute_all_difference_maps_with_stream():
     output_dir.mkdir()
     dtm_lidar_dir = Path("./data/lhd_dir_gpao")
 
-    run_difference_with_parallel.compute_all_difference_maps(dtm_lidar_dir, None, output_dir)
+    run_difference_with_parallel.compute_all_difference_maps(dtm_lidar_dir, None, output_dir, stream_type="LIDARHD")
 
     # check all difference maps are computed and stored in output_dir
     for lidar_dtm_file in dtm_lidar_dir.iterdir():
