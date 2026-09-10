@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 from pathlib import Path
@@ -45,7 +46,9 @@ def test_extract_lidarHD_tile_from_stream():
     output_dir.mkdir()
     dtm_output_file = output_dir / "dtm_lidarHD.tif"
     dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
-    compute_difference._extract_tiles_from_stream(dtm_lidar_file, dtm_output_file, stream="IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.LAMB93")
+    compute_difference._extract_tiles_from_stream(
+        dtm_lidar_file, dtm_output_file, stream="IGNF_LIDAR-HD_MNT_ELEVATION.ELEVATIONGRIDCOVERAGE.LAMB93"
+    )
 
     # read lidarHD file and check bounds
     with rasterio.open(dtm_lidar_file) as dtm_lidar, rasterio.open(dtm_output_file) as dtm_output:
@@ -181,16 +184,18 @@ def test_compute_difference_with_nodata():
         assert np.all(nodata_diff_mask[:, :-1, :-1] == nodata_combined), "Added or missed nodata values !"
 
 
-def test_main_with_stream():
+def test_main_with_all_streams():
     output_dir = TMP_PATH / "main_with_stream"
     output_dir.mkdir()
     dtm_lidar_file = "./data/lhd/Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
 
-    out_difference_file = output_dir / "Difference_with_rge_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+    with open("./data/stream_types.json") as f:
+        stream_types = json.load(f)
 
-    compute_difference.main(dtm_lidar_file, None, out_difference_file, stream_type="RGEALTI")
-
-    assert os.path.exists(out_difference_file), "difference with rge alti not computed !"
+    for stream_type in stream_types.keys():
+        out_difference_file = output_dir / f"Difference_with_{stream_type}_Semis_2021_0886_6443_LA93_IGN69_50CM.tif"
+        compute_difference.main(dtm_lidar_file, None, out_difference_file, stream_type=stream_type)
+        assert os.path.exists(out_difference_file), f"difference with {stream_type} not computed !"
 
 
 def test_main_with_secondary_folder():
