@@ -7,7 +7,7 @@ from joblib import Parallel, delayed
 from altianalysis.compute_difference import main
 
 
-def _compute_one_difference(dtm_file: str, _dir: Path, _out_dir_difference: Path, second_dir=None):
+def _compute_one_difference(dtm_file: str, _dir: Path, _out_dir_difference: Path, second_dir=None, stream_type: str = None):
 
     full_dtm_file = os.path.join(_dir, dtm_file)
     full_difference_file = os.path.join(_out_dir_difference, dtm_file)
@@ -16,10 +16,10 @@ def _compute_one_difference(dtm_file: str, _dir: Path, _out_dir_difference: Path
     if second_dir:
         second_file = os.path.join(second_dir, dtm_file)
 
-    main(full_dtm_file, second_file, full_difference_file)
+    main(full_dtm_file, second_file, full_difference_file, stream_type=stream_type)
 
 
-def compute_all_difference_maps(dir: Path, second_dir: Path | None, out_dir_difference: Path):
+def compute_all_difference_maps(dir: Path, second_dir: Path | None, out_dir_difference: Path, stream_type: str = None):
 
     os.makedirs(out_dir_difference, exist_ok=True)
     all_dtm_names = []
@@ -29,7 +29,7 @@ def compute_all_difference_maps(dir: Path, second_dir: Path | None, out_dir_diff
 
     # bulk compute
     _ = Parallel(n_jobs=12, verbose=True)(
-        delayed(_compute_one_difference)(dtm_file, dir, out_dir_difference, second_dir=second_dir)
+        delayed(_compute_one_difference)(dtm_file, dir, out_dir_difference, second_dir=second_dir, stream_type=stream_type)
         for dtm_file in all_dtm_names
     )
 
@@ -67,4 +67,4 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    compute_all_difference_maps(args.primary_dtm_dir, args.secondary_dtm_dir, args.name_dir_difference)
+    compute_all_difference_maps(args.primary_dtm_dir, args.secondary_dtm_dir, args.name_dir_difference, args.stream_type)

@@ -1,5 +1,6 @@
 # master
 -fix : handle URL with HTTPS (not only HTTP)
+-feature: Allow using different streams to compare (LIDARHD or RGEALTI)
 
 # 1.2.0
 -feature: handle two folders of DEMs for difference computation

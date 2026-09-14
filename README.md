@@ -55,12 +55,13 @@ python -m altianalysis.compute_difference \
 --name_save_out <NAME_SAVE_OUT>
 ```
 
-Dans le cas où vous voudriez calculer la carte de différence entre un MNT et le RGE Alti: 
+Dans le cas où vous voudriez calculer la carte de différence entre un MNT et un flux IGN (Rge-Alti ou LidarHD pour l'instant):
 
 ```bash
 python -m altianalysis.compute_difference \
 --primary_elevation_file <FIRST_DTM_FILE> \
---name_save_out <NAME_SAVE_OUT>
+--name_save_out <NAME_SAVE_OUT> \
+--stream_type <STREAM_TYPE>
 ```
 
 options:
@@ -68,10 +69,13 @@ options:
                         Chemin vers le permier MNT
 
   * --second_elevation_file SECOND_DTM_FILE
-                        Chemin vers le deuxième MNT  
+                        Chemin vers le deuxième MNT
 
   * --name_save_out NAME_SAVE_OUT
                         Chemin vers le fichier tif de sortie (carte de différence)
+
+  * --stream_type STREAM_TYPE
+                        Type de plux à utiliser. Les flux utilisables sont listés et décrits dans [data/stream_types.json](data/stream_types.json) (actuellement RGEALTI (résolution 1m) ou LidarHD (résolution 50cm))
 
 
 
@@ -92,7 +96,7 @@ python -m altianalysis.run_difference_with_gpao \
     [-c <COG_FILENAME>]
 ```
 
-Pour calculer des cartes de différences par rapport au flux RGE Alti: 
+Pour calculer des cartes de différences par rapport à un flux:
 
 ```bash
 python -m altianalysis.run_difference_with_gpao \
@@ -100,6 +104,7 @@ python -m altianalysis.run_difference_with_gpao \
     -o <OUT> \
     -l <LOCAL_STORE_PATH> \
     -s <RUNNER_STORE_PATH> \
+    -iii <STREAM_TYPE> \
     [-g <GPAO_HOSTNAME>] \
     [-p <PROJECT_NAME>] \
     [-c <COG_FILENAME>]
@@ -112,6 +117,8 @@ options:
                         Dossier contenant le permier set de  MNTs
   * -ii SECOND_DTM_DIR, --secondary_dtm_dir SECOND_DTM_DIR
                         Dossier contenant le deuxième set de  MNTs  ( s'il existe )
+  * -iii STREAM_TYPE, --stream_type STREAM_TYPE
+                        Type de plux à utiliser. Les flux utilisables sont listés et décrits dans [data/stream_types.json](data/stream_types.json) (actuellement RGEALTI (résolution 1m) ou LidarHD (résolution 50cm))
   * -o OUT, --out OUT     Dossier de sortie où seront sauvegardées les cartes de
                         differences
   * -l LOCAL_STORE_PATH, --local_store_path LOCAL_STORE_PATH

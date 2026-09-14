@@ -26,5 +26,4 @@ COPY test test
 COPY pyproject.toml pyproject.toml
 
 # Copy test data that are stored directly in the altianalysis repository
-COPY data/lhd data/lhd
-COPY data/lhd_dir_gpao  data/lhd_dir_gpao
+COPY data data
